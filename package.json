@@ -1,0 +1,25 @@
+{
+  "name": "ift611",
+  "version": "1.0.0",
+  "description": "Projet IFT611",
+  "main": "Server/server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon Server/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bouc1620/IFT611.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bouc1620/IFT611/issues"
+  },
+  "homepage": "https://github.com/bouc1620/IFT611#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "nodemon": "^2.0.7",
+    "socket.io": "^3.1.0"
+  }
+}
