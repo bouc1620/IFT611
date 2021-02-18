@@ -1,6 +1,9 @@
 
 const changesInEditor = function(instance, changeObj) {
     debugInfo(changeObj);
+    if(changeObj.origin === "+input") {
+        documentData.addCharacterLocal(0,changeObj.text,changeObj.from);
+    }
 }
 
 const debugInfo = function(changeObj) {

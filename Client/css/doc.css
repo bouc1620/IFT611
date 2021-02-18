@@ -1,0 +1,8 @@
+html, body {
+    height: 95%;
+}
+
+.CodeMirror {
+    margin-top: 1em;
+	height: 100%;
+}
