@@ -1,28 +1,22 @@
-
-const changesInEditor = function(instance, changeObj) {
-    debugInfo(changeObj);
-    if(changeObj.origin === "+input") {
-        documentData.addCharacterLocal(0,changeObj.text,changeObj.from);
-    }
-}
-
-const debugInfo = function(changeObj) {
-    console.log("Type Change : " + changeObj.origin);
-    console.log("Value insert : " + changeObj.text);
-    console.log("Value removed : " + changeObj.removed);
-    console.log("From");
-    console.log(changeObj.from);
-    console.log("To");
-    console.log(changeObj.to);
-}
-
-const simplemde = new SimpleMDE({ 
-    element: document.getElementById("editor"),
+const simpleMDE = new SimpleMDE({
+    element: document.getElementById('editor'),
     spellChecker: false,
-    toolbar: false
+    toolbar: false,
+    status: false
 });
 
-simplemde.codemirror.on("change", changesInEditor);
-simplemde.codemirror.on("cursorActivity", function(instance) {
-    console.log(instance);
+simpleMDE.codemirror.on('change', (instance, changeObj) => {
+    if (changeObj.origin == '+input') {
+        if (changeObj.removed == '') {
+            documentData.insert_fromLocal(changeObj.text.length > 1 ? '\n' : changeObj.text[0], simpleMDE.codemirror.indexFromPos(changeObj.to), self.id);
+        } else {
+
+        }
+    } else if (changeObj.origin == '+delete') {
+
+    }
 });
+
+function insertCharacter (char, index) {
+    simpleMDE.codemirror.replaceRange(char, simpleMDE.codemirror.posFromIndex(index));
+}
