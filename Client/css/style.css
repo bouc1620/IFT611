@@ -1,9 +1,9 @@
 html,
 body {
-    height: 98%;
+  height: 98%;
 }
 
 .CodeMirror {
-    margin-top: 1em;
-    height: 100%;
+  margin-top: 1em;
+  height: 100%;
 }

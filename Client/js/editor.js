@@ -1,22 +1,29 @@
-const simpleMDE = new SimpleMDE({
-    element: document.getElementById('editor'),
-    spellChecker: false,
-    toolbar: false,
-    status: false
+const editor = new SimpleMDE({
+  element: document.getElementById('editor'),
+  spellChecker: false,
+  toolbar: false,
+  status: false
 });
 
-simpleMDE.codemirror.on('change', (instance, changeObj) => {
-    if (changeObj.origin == '+input') {
-        if (changeObj.removed == '') {
-            documentData.insert_fromLocal(changeObj.text.length > 1 ? '\n' : changeObj.text[0], simpleMDE.codemirror.indexFromPos(changeObj.to), self.id);
-        } else {
+editor.codemirror.options.readOnly = 'nocursor';
+editor.codemirror.options.smartIndent = false;
+editor.codemirror.options.dragDrop = false;
 
-        }
-    } else if (changeObj.origin == '+delete') {
+editor.codemirror.on('change', (_instance, changeObj) => {
+  if (changeObj.origin == '+input') {
+    if (changeObj.removed == '') {
+      if (changeObj.text[0].length > 1) {
+        editor.codemirror.indentLine(changeObj.to.line, -1 * changeObj.text[0].length);
+        return;
+      }
 
+      let char = changeObj.text.length > 1 ? '\n' : changeObj.text[0];
+      let index = editor.codemirror.indexFromPos(changeObj.to);
+      documentData.insert_fromLocal(char, index, self.id);
+    } else {
+      // TODO : handle text replacement
     }
+  } else if (changeObj.origin == '+delete') {
+    // TODO : handle text deletion
+  }
 });
-
-function insertCharacter (char, index) {
-    simpleMDE.codemirror.replaceRange(char, simpleMDE.codemirror.posFromIndex(index));
-}
