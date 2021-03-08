@@ -104,6 +104,7 @@ class Document {
   constructor () {
     this.document = [];
     this.deletionBacklog = [];
+    this.cursors = new Map();
     this.alreadyCopied = false;
   }
 
@@ -118,6 +119,12 @@ class Document {
     editor.codemirror.setOption('readOnly', false);
 
     editor.codemirror.setValue(this.document.map((charObject) => charObject.char).join(''));
+
+    broadcast({
+      operation: 'cursor',
+      user: self.id,
+      pos: { line: 0, ch: 0 }
+    });
   }
 
   insert_fromLocal (char, index) {
@@ -193,6 +200,16 @@ class Document {
   replace_fromRemote ({ removed, added }) {
     this.delete_fromRemote(removed);
     this.insert_fromRemote(added);
+  }
+
+  updateCursorPosition (userId, position) {
+    let cursor = this.cursors.get(userId);
+    if (cursor === undefined) {
+      cursor = createCursor(position);
+    } else {
+      cursor = updateCursor(cursor, position);
+    }
+    this.cursors.set(userId, cursor);
   }
 
   /**

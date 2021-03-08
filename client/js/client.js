@@ -109,6 +109,8 @@ function receiveData (data, link) {
       operation: 'init',
       payload: documentData.document
     }));
+  } else if (data.operation == 'cursor') {
+    documentData.updateCursorPosition(data.user, data.pos);
   } else {
     console.error(`received unexpected operation type : ${data.operation}`);
   }
