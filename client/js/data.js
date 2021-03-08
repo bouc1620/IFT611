@@ -100,13 +100,6 @@ class Character {
   }
 }
 
-class Cursor {
-  constructor (userId, cursorPos) {
-    this.userId = userId;
-    this.cursorPos = cursorPos;
-  }
-}
-
 class Document {
   constructor () {
     this.document = [];
