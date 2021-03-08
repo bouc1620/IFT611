@@ -29,3 +29,30 @@ editor.codemirror.on('change', (_instance, changeObj) => {
     documentData.delete_fromLocal(index, length);
   }
 });
+
+editor.codemirror.on('cursorActivity', (_instance) => {
+  broadcast({
+    operation: 'cursor',
+    user: self.id,
+    pos: _instance.getCursor()
+  });
+});
+
+function createCursor (pos) {
+  const cursorCoords = editor.codemirror.cursorCoords(pos);
+  const cursorBody = document.createElement('span');
+  cursorBody.style.borderLeftStyle = 'solid';
+  cursorBody.style.borderLeftWidth = '1.5px';
+  cursorBody.style.borderLeftColor = '#ff0000';
+  cursorBody.style.height = `${(cursorCoords.bottom - cursorCoords.top)}px`;
+  cursorBody.style.padding = 0;
+  cursorBody.style.zIndex = 0;
+
+  return editor.codemirror.setBookmark(pos, { widget: cursorBody });
+}
+
+function updateCursor (cursor, position) {
+  console.log(cursor);
+  cursor.clear();
+  return createCursor(position);
+}
