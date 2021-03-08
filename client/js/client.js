@@ -32,6 +32,7 @@ self.on('open', () => {
       let link = self.connect(peer);
       link.on('data', (data) => receiveData(data, link));
 
+      // ask for a copy of the document
       if (peer == index) {
         link.on('open', () => {
           link.send(JSON.stringify({
@@ -67,16 +68,23 @@ self.on('connection', (link) => {
   });
 });
 
-// filter out disconnected peers
-function refreshPeers () {
-  self.listAllPeers((peers) => {
-    for (let i = connections.length - 1; i >= 0; i--) {
-      if (peers.findIndex((peer) => peer == connections[i].id) == -1) {
-        connections.splice(i, 1);
-      }
+// filter out disconnected peers once in a while
+var refreshPeers = (() => {
+  const wait = 5; // the number of broadcasts in between each refresh
+  let current = 0;
+  return () => {
+    if (current++ >= wait) {
+      self.listAllPeers((peers) => {
+        for (let i = connections.length - 1; i >= 0; i--) {
+          if (peers.findIndex((peer) => peer == connections[i].id) == -1) {
+            connections.splice(i, 1);
+          }
+        }
+      });
+      current = 0;
     }
-  });
-}
+  };
+})();
 
 function broadcast (message) {
   refreshPeers();
@@ -90,8 +98,7 @@ function receiveData (data, link) {
   if (data.operation == 'insert') {
     documentData.insert_fromRemote(data.payload);
   } else if (data.operation == 'delete') {
-    console.debug('received delete operation, not implemented yet');
-    // documentData.delete_fromRemote(data.payload);
+    documentData.delete_fromRemote(data.payload);
   } else if (data.operation == 'replace') {
     console.debug('received replace operation, not implemented yet');
     // documentData.replace_fromRemote(data.payload);

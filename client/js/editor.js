@@ -16,11 +16,12 @@ editor.codemirror.on('change', (_instance, changeObj) => {
     if (changeObj.removed == '') {
       let char = changeObj.text.length > 1 ? '\n' : changeObj.text[0];
       let index = editor.codemirror.indexFromPos(changeObj.to);
-      documentData.insert_fromLocal(char, index, self.id);
+      documentData.insert_fromLocal(char, index);
     } else {
       // TODO : handle text replacement
     }
   } else if (changeObj.origin == '+delete') {
-    // TODO : handle text deletion
+    let index = editor.codemirror.indexFromPos(changeObj.from);
+    documentData.delete_fromLocal(index);
   }
 });

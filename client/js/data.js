@@ -9,6 +9,10 @@ class Character {
     this.user = user;
   }
 
+  static equals (char1, char2) {
+    return char1.char == char2.char && this.comparePos(char1, char2) == 0;
+  }
+
   static comparePos (char1, char2) {
     for (let i = 0; i < Math.min(char1.pos.length, char2.pos.length); i++) {
       if (char1.pos[i] > char2.pos[i]) {
@@ -99,13 +103,8 @@ class Character {
 class Document {
   constructor () {
     this.document = [];
+    this.deletionBacklog = [];
     this.alreadyCopied = false;
-    this.backlog = {
-      insert: [],
-      delete: [],
-      replace: [],
-      copy: []
-    };
   }
 
   copyDocument (document) {
@@ -119,16 +118,14 @@ class Document {
     editor.codemirror.setOption('readOnly', false);
 
     editor.codemirror.setValue(this.document.map((charObject) => charObject.char).join(''));
-
-    this.processBacklog();
   }
 
-  insert_fromLocal (char, index, user) {
+  insert_fromLocal (char, index) {
     const before = index != 0 ? this.document[index - 1].pos : null;
     const after = this.document.length > index ? this.document[index].pos : null;
 
     let newPos = Character.genPosBetween(before, after);
-    const newChar = new Character(char, newPos, user);
+    const newChar = new Character(char, newPos, self.id);
 
     this.document.splice(index, 0, newChar);
 
@@ -139,66 +136,51 @@ class Document {
   }
 
   insert_fromRemote (char) {
-    if (!this.alreadyCopied) {
-      this.backlog.insert.push(char);
+    // search the deletion backlog to see if a delete operation was received for the Character
+    let index = this.deletionBacklog.findIndex((charToRemove) => Character.equals(char, charToRemove));
+    if (index != -1) {
+      this.deletionBacklog.splice(found, 1);
       return;
     }
 
-    let index = this.findCharIndex(char);
+    index = this.findCharIndex(char).index;
 
     this.document.splice(index, 0, char);
     editor.codemirror.replaceRange(char.char, editor.codemirror.posFromIndex(index));
   }
 
-  replace_fromLocal (char, pos, user) {
+  delete_fromLocal (index) {
+    let [removedChar] = this.document.splice(index, 1);
+
+    broadcast(JSON.stringify({
+      operation: 'delete',
+      payload: removedChar
+    }));
+  }
+  
+  delete_fromRemote (char) {
+    let { found, index } = this.findCharIndex(char);
+    if (found) {
+      this.document.splice(index, 1);
+      editor.codemirror.replaceRange('', editor.codemirror.posFromIndex(index), editor.codemirror.posFromIndex(index + 1));
+    } else {
+      this.deletionBacklog.push(char);
+    }
+  }
+
+  replace_fromLocal () {
     // TODO
   }
 
   replace_fromRemote () {
-    if (!this.alreadyCopied) {
-      this.backlog.replace.push(/* arguments in an object */);
-      return;
-    }
-
     // TODO
-  }
-
-  delete_fromLocal (char, pos, user) {
-    // TODO
-  }
-
-  delete_fromRemote () {
-    if (!this.alreadyCopied) {
-      this.backlog.delete.push(/* arguments in an object */);
-      return;
-    }
-
-    // TODO
-  }
-
-  /**
-   * Processes the operation backlog containing the operations received while the peer
-   * was waiting for a copy of the document
-   */
-  processBacklog () {
-    let exists = false;
-    for (let [_log, list] of Object.entries(this.backlog)) {
-      if (list.length > 0) {
-        console.debug(list);
-        exists = true;
-      }
-    }
-
-    // TODO, process the operations received before the document initialization
-
-    console.debug(`processBacklog, not implemented yet. there is ${exists ? 'a' : 'no'} backlog`);
   }
 
   /**
    * Performs a binary search to find either the Character's correct insertion index in the
-   * document array or the Character's actual index if it was found in the array
+   * document array or the Character's actual index if it was found
    * @param {Character} char 
-   * @returns {number} index
+   * @returns {object} { found, index }
    */
   findCharIndex (char) {
     let low = 0;
@@ -213,11 +195,17 @@ class Document {
       } else if (compare == -1) {
         high = k - 1;
       } else {
-        return k;
+        return {
+          found: char.char == this.document[k].char,
+          index: k
+        };
       }
     }
 
-    return high + 1;
+    return {
+      found: false,
+      index: high + 1
+    };
   }
 }
 
