@@ -3,7 +3,7 @@ const { ExpressPeerServer } = require('peer');
 const path = require('path');
 
 const PEERS = new Set();
-const CLIENT_PATH = path.resolve(__dirname + '/../Client/');
+const CLIENT_PATH = path.resolve(__dirname + '/../client/');
 const PORT = process.env.PORT || 3000;
 
 const app = express();
