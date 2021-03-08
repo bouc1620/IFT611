@@ -1,11 +1,11 @@
 {
   "name": "ift611",
   "version": "1.0.0",
-  "description": "Projet IFT611",
-  "main": "Server/server.js",
+  "description": "Projet IFT611, Éditeur de texte collaboratif en temps réel",
+  "main": "server/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon Server/server.js"
+    "start": "nodemon server/server.js",
+    "release": "node server/server.js"
   },
   "repository": {
     "type": "git",
@@ -18,13 +18,13 @@
   },
   "homepage": "https://github.com/bouc1620/IFT611#readme",
   "dependencies": {
-    "cors": "^2.8.5",
     "express": "^4.17.1",
-    "nodemon": "^2.0.7",
     "peer": "^0.6.1",
     "peerjs": "^1.3.1",
     "pug": "^3.0.2",
-    "simplemde": "^1.11.2",
-    "socket.io": "^3.1.0"
+    "simplemde": "^1.11.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
   }
 }

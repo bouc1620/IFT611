@@ -43,7 +43,7 @@ class Character {
     let newPos;
     if (before) {
       if (after) {
-        if (before[0] + 1 == after[0]) {
+        if (before[0] + 1 >= after[0]) {
           if (before.length == after.length) {
             if (before.length == 1) {
               newPos = [before[0], MID];
@@ -127,9 +127,8 @@ class Document {
     const before = index != 0 ? this.document[index - 1].pos : null;
     const after = this.document.length > index ? this.document[index].pos : null;
 
-    let pos = Character.genPosBetween(before, after);
-
-    const newChar = new Character(char, pos, user);
+    let newPos = Character.genPosBetween(before, after);
+    const newChar = new Character(char, newPos, user);
 
     this.document.splice(index, 0, newChar);
 
@@ -148,7 +147,7 @@ class Document {
     let index = this.findCharIndex(char);
 
     this.document.splice(index, 0, char);
-    editor.codemirror.replaceRange(char.char, editor.codemirror.posFromIndex());
+    editor.codemirror.replaceRange(char.char, editor.codemirror.posFromIndex(index));
   }
 
   replace_fromLocal (char, pos, user) {
