@@ -134,17 +134,7 @@ class Document {
 
     const newChar = new Character(char, pos, user);
 
-    // CodeMirror strips white spaces between a new line and the next character
-    // keep the document array up to date with the editor
-    let to = index;
-    if (char == '\n') {
-      while (to < this.document.length &&
-        this.document[to].char == ' ') {
-        ++to;
-      }
-    }
-
-    this.document.splice(index, to - index, newChar);
+    this.document.splice(index, 0, newChar);
 
     broadcast(JSON.stringify({
       operation: 'insert',
@@ -175,19 +165,8 @@ class Document {
       }
     }
 
-    // CodeMirror strips white spaces between a new line and the next character
-    // this information is not part of the received data, we must handle this locally
-    let from = high + 1;
-    let to = from;
-    if (char.char == '\n') {
-      while (to < this.document.length &&
-        this.document[to].char == ' ') {
-        ++to;
-      }
-    }
-
-    this.document.splice(from, to - from, char);
-    editor.codemirror.replaceRange(char.char, editor.codemirror.posFromIndex(from), editor.codemirror.posFromIndex(to));
+    this.document.splice(high + 1, 0, char);
+    editor.codemirror.replaceRange(char.char, editor.codemirror.posFromIndex(high + 1));
   }
 
   replace_fromLocal (char, pos, user) {
