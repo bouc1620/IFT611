@@ -1,7 +1,3 @@
-const MIN = 1; // 2^0
-const MID = 32768; // 2^15
-const MAX = 1073741824; // 2^30
-
 class Character {
   constructor (char, pos, user) {
     this.char = char;
@@ -44,6 +40,10 @@ class Character {
    * @returns {Character.pos} newPos
    */
   static genPosBetween (before, after) {
+    const MIN = 1; // 2^0
+    const MID = 32768; // 2^15
+    const MAX = 1073741824; // 2^30
+
     let newPos;
     if (before) {
       if (after) {
@@ -129,17 +129,17 @@ class Document {
 
     this.document.splice(index, 0, newChar);
 
-    broadcast(JSON.stringify({
+    broadcast({
       operation: 'insert',
       payload: newChar
-    }));
+    });
   }
 
   insert_fromRemote (char) {
     // search the deletion backlog to see if a delete operation was received for the Character
     let index = this.deletionBacklog.findIndex((charToRemove) => Character.equals(char, charToRemove));
     if (index != -1) {
-      this.deletionBacklog.splice(found, 1);
+      this.deletionBacklog.splice(index, 1);
       return;
     }
 
@@ -149,31 +149,50 @@ class Document {
     editor.codemirror.replaceRange(char.char, editor.codemirror.posFromIndex(index));
   }
 
-  delete_fromLocal (index) {
-    let [removedChar] = this.document.splice(index, 1);
+  delete_fromLocal (index, length) {
+    let removedChars = this.document.splice(index, length);
 
-    broadcast(JSON.stringify({
+    broadcast({
       operation: 'delete',
-      payload: removedChar
-    }));
+      payload: removedChars
+    });
   }
-  
-  delete_fromRemote (char) {
-    let { found, index } = this.findCharIndex(char);
-    if (found) {
-      this.document.splice(index, 1);
-      editor.codemirror.replaceRange('', editor.codemirror.posFromIndex(index), editor.codemirror.posFromIndex(index + 1));
-    } else {
-      this.deletionBacklog.push(char);
+
+  delete_fromRemote (removed) {
+    for (let charToRemove of removed) {
+      let { found, index } = this.findCharIndex(charToRemove);
+      if (found) {
+        this.document.splice(index, 1);
+        editor.codemirror.replaceRange('', editor.codemirror.posFromIndex(index), editor.codemirror.posFromIndex(index + 1));
+      } else {
+        this.deletionBacklog.push(charToRemove);
+      }
     }
   }
 
-  replace_fromLocal () {
-    // TODO
+  replace_fromLocal (char, index, length) {
+    let removedChars = this.document.splice(index, length);
+
+    const before = index != 0 ? this.document[index - 1].pos : null;
+    const after = this.document.length > index ? this.document[index].pos : null;
+
+    let newPos = Character.genPosBetween(before, after);
+    const newChar = new Character(char, newPos, self.id);
+
+    this.document.splice(index, 0, newChar);
+
+    broadcast({
+      operation: 'replace',
+      payload: {
+        removed: removedChars,
+        added: newChar
+      }
+    });
   }
 
-  replace_fromRemote () {
-    // TODO
+  replace_fromRemote ({ removed, added }) {
+    this.delete_fromRemote(removed);
+    this.insert_fromRemote(added);
   }
 
   /**

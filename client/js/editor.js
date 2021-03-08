@@ -18,10 +18,14 @@ editor.codemirror.on('change', (_instance, changeObj) => {
       let index = editor.codemirror.indexFromPos(changeObj.to);
       documentData.insert_fromLocal(char, index);
     } else {
-      // TODO : handle text replacement
+      let char = changeObj.text.length > 1 ? '\n' : changeObj.text[0];
+      let index = editor.codemirror.indexFromPos(changeObj.from);
+      let length = changeObj.removed.reduce((total, current) => total + current.length, 0) + changeObj.removed.length - 1;
+      documentData.replace_fromLocal(char, index, length);
     }
   } else if (changeObj.origin == '+delete') {
     let index = editor.codemirror.indexFromPos(changeObj.from);
-    documentData.delete_fromLocal(index);
+    let length = changeObj.removed.reduce((total, current) => total + current.length, 0) + changeObj.removed.length - 1;
+    documentData.delete_fromLocal(index, length);
   }
 });

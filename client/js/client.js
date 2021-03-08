@@ -70,7 +70,7 @@ self.on('connection', (link) => {
 
 // filter out disconnected peers once in a while
 var refreshPeers = (() => {
-  const wait = 5; // the number of broadcasts in between each refresh
+  const wait = 5; // the number of broadcasts between each refresh
   let current = 0;
   return () => {
     if (current++ >= wait) {
@@ -88,6 +88,7 @@ var refreshPeers = (() => {
 
 function broadcast (message) {
   refreshPeers();
+  message = JSON.stringify(message);
   for (const conn of connections) {
     conn.link.send(message);
   }
@@ -100,15 +101,14 @@ function receiveData (data, link) {
   } else if (data.operation == 'delete') {
     documentData.delete_fromRemote(data.payload);
   } else if (data.operation == 'replace') {
-    console.debug('received replace operation, not implemented yet');
-    // documentData.replace_fromRemote(data.payload);
+    documentData.replace_fromRemote(data.payload);
+  } else if (data.operation == 'init') {
+    documentData.copyDocument(data.payload);
   } else if (data.operation == 'copy') {
     link.send(JSON.stringify({
       operation: 'init',
       payload: documentData.document
     }));
-  } else if (data.operation == 'init') {
-    documentData.copyDocument(data.payload);
   } else {
     console.error(`received unexpected operation type : ${data.operation}`);
   }
