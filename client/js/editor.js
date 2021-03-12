@@ -71,7 +71,8 @@ function createCursor (userId, pos) {
   return editor.codemirror.setBookmark(pos, { widget: cursorBody });
 }
 
-function updateCursor (userId, cursor, position) {
+function updateCursor (cursor, position) {
+  const nodeWidget = cursor.widgetNode;
   cursor.clear();
-  return createCursor(userId, position);
+  return editor.codemirror.setBookmark(position, { widget: nodeWidget });
 }

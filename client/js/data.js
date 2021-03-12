@@ -211,7 +211,7 @@ class Document {
     if (cursor === undefined) {
       cursor = createCursor(userId, position);
     } else {
-      cursor = updateCursor(userId, cursor, position);
+      cursor = updateCursor(cursor, position);
     }
     this.cursors.set(userId, cursor);
   }
