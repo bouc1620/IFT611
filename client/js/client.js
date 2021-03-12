@@ -1,5 +1,15 @@
 const connections = [];
 
+const operations = {
+  INSERT: 0,
+  DELETE: 1,
+  REPLACE: 2,
+  INIT: 3,
+  COPY: 4,
+  DEMAND_CURSOR: 5,
+  UPDATE_CURSOR: 6
+};
+
 const self = new Peer(
   peerID, {
   host: '/',
@@ -36,7 +46,7 @@ self.on('open', () => {
       if (peer == index) {
         link.on('open', () => {
           link.send(JSON.stringify({
-            operation: 'copy',
+            operation: operations.COPY,
             payload: ''
           }));
         });
@@ -96,28 +106,37 @@ function broadcast (message) {
 
 function receiveData (data, link) {
   data = JSON.parse(data);
-  if (data.operation == 'insert') {
-    documentData.insert_fromRemote(data.payload);
-  } else if (data.operation == 'delete') {
-    documentData.delete_fromRemote(data.payload);
-  } else if (data.operation == 'replace') {
-    documentData.replace_fromRemote(data.payload);
-  } else if (data.operation == 'init') {
-    documentData.copyDocument(data.payload);
-  } else if (data.operation == 'copy') {
-    link.send(JSON.stringify({
-      operation: 'init',
-      payload: documentData.document
-    }));
-  } else if (data.operation == 'demandCursor') {
-    link.send(JSON.stringify({
-      operation: 'updateCursor',
-      user: self.id,
-      pos: editor.codemirror.getCursor()
-    }));
-  } else if (data.operation == 'updateCursor') {
-    documentData.updateCursorPosition(data.user, data.pos);
-  } else {
-    console.error(`received unexpected operation type : ${data.operation}`);
+
+  switch (data.operation) {
+    case operations.INSERT:
+      documentData.insert_fromRemote(data.payload);
+      break;
+    case operations.DELETE:
+      documentData.delete_fromRemote(data.payload);
+      break;
+    case operations.REPLACE:
+      documentData.replace_fromRemote(data.payload);
+      break;
+    case operations.INIT:
+      documentData.copyDocument(data.payload);
+      break;
+    case operations.COPY:
+      link.send(JSON.stringify({
+        operation: operations.INIT,
+        payload: documentData.document
+      }));
+      break;
+    case operations.DEMAND_CURSOR:
+      link.send(JSON.stringify({
+        operation: operations.UPDATE_CURSOR,
+        user: self.id,
+        pos: editor.codemirror.getCursor()
+      }));
+      break;
+    case operations.UPDATE_CURSOR:
+      documentData.updateCursorPosition(data.user, data.pos);
+      break;
+    default:
+      console.error(`received unexpected operation type : ${data.operation}`);
   }
 }

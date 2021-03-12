@@ -45,7 +45,7 @@ editor.codemirror.on('change', (_instance, changeObj) => {
 
 editor.codemirror.on('cursorActivity', (_instance) => {
   broadcast({
-    operation: 'updateCursor',
+    operation: operations.UPDATE_CURSOR,
     user: self.id,
     pos: _instance.getCursor()
   });
