@@ -121,9 +121,13 @@ class Document {
     editor.codemirror.setValue(this.document.map((charObject) => charObject.char).join(''));
 
     broadcast({
-      operation: 'cursor',
+      operation: 'updateCursor',
       user: self.id,
       pos: { line: 0, ch: 0 }
+    });
+
+    broadcast({
+      operation: 'demandCursor'
     });
   }
 
@@ -205,9 +209,9 @@ class Document {
   updateCursorPosition (userId, position) {
     let cursor = this.cursors.get(userId);
     if (cursor === undefined) {
-      cursor = createCursor(position);
+      cursor = createCursor(userId, position);
     } else {
-      cursor = updateCursor(cursor, position);
+      cursor = updateCursor(userId, cursor, position);
     }
     this.cursors.set(userId, cursor);
   }

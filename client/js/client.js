@@ -109,7 +109,13 @@ function receiveData (data, link) {
       operation: 'init',
       payload: documentData.document
     }));
-  } else if (data.operation == 'cursor') {
+  } else if (data.operation == 'demandCursor') {
+    link.send(JSON.stringify({
+      operation: 'updateCursor',
+      user: self.id,
+      pos: editor.codemirror.getCursor()
+    }));
+  } else if (data.operation == 'updateCursor') {
     documentData.updateCursorPosition(data.user, data.pos);
   } else {
     console.error(`received unexpected operation type : ${data.operation}`);
