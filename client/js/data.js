@@ -121,9 +121,13 @@ class Document {
     editor.codemirror.setValue(this.document.map((charObject) => charObject.char).join(''));
 
     broadcast({
-      operation: 'cursor',
+      operation: operations.UPDATE_CURSOR,
       user: self.id,
       pos: { line: 0, ch: 0 }
+    });
+
+    broadcast({
+      operation: operations.DEMAND_CURSOR
     });
   }
 
@@ -137,7 +141,7 @@ class Document {
     this.document.splice(index, 0, newChar);
 
     broadcast({
-      operation: 'insert',
+      operation: operations.INSERT,
       payload: newChar
     });
   }
@@ -160,7 +164,7 @@ class Document {
     let removedChars = this.document.splice(index, length);
 
     broadcast({
-      operation: 'delete',
+      operation: operations.DELETE,
       payload: removedChars
     });
   }
@@ -189,7 +193,7 @@ class Document {
     this.document.splice(index, 0, newChar);
 
     broadcast({
-      operation: 'replace',
+      operation: operations.REPLACE,
       payload: {
         removed: removedChars,
         added: newChar
@@ -205,7 +209,7 @@ class Document {
   updateCursorPosition (userId, position) {
     let cursor = this.cursors.get(userId);
     if (cursor === undefined) {
-      cursor = createCursor(position);
+      cursor = createCursor(userId, position);
     } else {
       cursor = updateCursor(cursor, position);
     }
