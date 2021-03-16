@@ -40,24 +40,24 @@ editor.codemirror.on('cursorActivity', (instance) => {
   });
 });
 
-function createCursor (user, pos) {
-  const COLORS = [
-    '#ff0000',
-    '#ff6600',
-    '#0066ff',
-    '#00ffff',
-    '#ff00ff',
-    '#663300',
-    '#ffff00',
-    '#6600ff',
-    '#ff0066',
-    '#006633'
-  ];
+const CURSORS_COLORS = [
+  '#ff0000',
+  '#ff6600',
+  '#0066ff',
+  '#00ffff',
+  '#ff00ff',
+  '#663300',
+  '#ffff00',
+  '#6600ff',
+  '#ff0066',
+  '#006633'
+];
 
+function createCursor (user, pos) {
   const cursor = document.createElement('span');
   cursor.classList.add('cursor');
 
-  cursor.style.borderLeftColor = COLORS[user % COLORS.length];
+  cursor.style.borderLeftColor = CURSORS_COLORS[user % CURSORS_COLORS.length];
 
   const { _left, top, bottom } = editor.codemirror.cursorCoords(pos);
   cursor.style.height = `${bottom - top}px`;

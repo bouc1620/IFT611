@@ -87,7 +87,6 @@ var refreshPeers = (() => {
         for (let i = connections.length - 1; i >= 0; i--) {
           if (peers.findIndex((peer) => peer == connections[i].id) == -1) {
             documentData.removeCursor(connections[i].id);
-
             connections.splice(i, 1);
           }
         }
