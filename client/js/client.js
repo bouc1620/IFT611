@@ -1,14 +1,14 @@
-const connections = [];
-
-const operations = {
+const OPERATIONS = {
   INSERT: 0,
   DELETE: 1,
   REPLACE: 2,
-  INIT: 3,
-  COPY: 4,
-  DEMAND_CURSOR: 5,
-  UPDATE_CURSOR: 6
+  REQUEST_DOCUMENT: 3,
+  SEND_DOCUMENT: 4,
+  REQUEST_CURSOR: 5,
+  SEND_CURSOR: 6
 };
+
+const connections = [];
 
 const self = new Peer(
   peerID, {
@@ -26,7 +26,6 @@ self.on('open', () => {
     }
 
     if (peers.length == 0) {
-      documentData.alreadyCopied = true;
       editor.codemirror.options.readOnly = false;
       return;
     }
@@ -46,8 +45,8 @@ self.on('open', () => {
       if (peer == index) {
         link.on('open', () => {
           link.send(JSON.stringify({
-            operation: operations.COPY,
-            payload: ''
+            operation: OPERATIONS.REQUEST_DOCUMENT,
+            payload: null
           }));
         });
       }
@@ -87,6 +86,8 @@ var refreshPeers = (() => {
       self.listAllPeers((peers) => {
         for (let i = connections.length - 1; i >= 0; i--) {
           if (peers.findIndex((peer) => peer == connections[i].id) == -1) {
+            documentData.removeCursor(connections[i].id);
+
             connections.splice(i, 1);
           }
         }
@@ -108,33 +109,35 @@ function receiveData (data, link) {
   data = JSON.parse(data);
 
   switch (data.operation) {
-    case operations.INSERT:
+    case OPERATIONS.INSERT:
       documentData.insert_fromRemote(data.payload);
       break;
-    case operations.DELETE:
+    case OPERATIONS.DELETE:
       documentData.delete_fromRemote(data.payload);
       break;
-    case operations.REPLACE:
+    case OPERATIONS.REPLACE:
       documentData.replace_fromRemote(data.payload);
       break;
-    case operations.INIT:
-      documentData.copyDocument(data.payload);
-      break;
-    case operations.COPY:
+    case OPERATIONS.REQUEST_DOCUMENT:
       link.send(JSON.stringify({
-        operation: operations.INIT,
+        operation: OPERATIONS.SEND_DOCUMENT,
         payload: documentData.document
       }));
       break;
-    case operations.DEMAND_CURSOR:
+    case OPERATIONS.SEND_DOCUMENT:
+      documentData.copyDocument(data.payload);
+      break;
+    case OPERATIONS.REQUEST_CURSOR:
       link.send(JSON.stringify({
-        operation: operations.UPDATE_CURSOR,
-        user: self.id,
-        pos: editor.codemirror.getCursor()
+        operation: OPERATIONS.SEND_CURSOR,
+        payload: {
+          user: self.id,
+          pos: editor.codemirror.getCursor()
+        }
       }));
       break;
-    case operations.UPDATE_CURSOR:
-      documentData.updateCursorPosition(data.user, data.pos);
+    case OPERATIONS.SEND_CURSOR:
+      documentData.updateCursor(data.payload);
       break;
     default:
       console.error(`received unexpected operation type : ${data.operation}`);

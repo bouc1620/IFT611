@@ -7,3 +7,9 @@ body {
   margin-top: 1em;
   height: 100%;
 }
+
+.cursor {
+  border-left: 2px solid;
+  padding: 0;
+  z-index: 0;
+}
