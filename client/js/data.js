@@ -215,6 +215,7 @@ class Document {
     const cursor = this.cursors.get(user);
     if (cursor) {
       cursor.clear();
+      this.cursors.delete(user);
     }
   }
 
