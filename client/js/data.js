@@ -105,29 +105,28 @@ class Document {
     this.document = [];
     this.deletionBacklog = [];
     this.cursors = new Map();
-    this.alreadyCopied = false;
   }
 
   copyDocument (document) {
-    if (this.alreadyCopied) {
-      return;
-    }
-
     this.document = document;
 
-    this.alreadyCopied = true;
     editor.codemirror.setOption('readOnly', false);
-
     editor.codemirror.setValue(this.document.map((charObject) => charObject.char).join(''));
 
     broadcast({
-      operation: operations.UPDATE_CURSOR,
-      user: self.id,
-      pos: { line: 0, ch: 0 }
+      operation: OPERATIONS.SEND_CURSOR,
+      payload: {
+        user: self.id,
+        pos: {
+          line: 0,
+          ch: 0
+        }
+      }
     });
 
     broadcast({
-      operation: operations.DEMAND_CURSOR
+      operation: OPERATIONS.REQUEST_CURSOR,
+      payload: null
     });
   }
 
@@ -141,7 +140,7 @@ class Document {
     this.document.splice(index, 0, newChar);
 
     broadcast({
-      operation: operations.INSERT,
+      operation: OPERATIONS.INSERT,
       payload: newChar
     });
   }
@@ -164,7 +163,7 @@ class Document {
     let removedChars = this.document.splice(index, length);
 
     broadcast({
-      operation: operations.DELETE,
+      operation: OPERATIONS.DELETE,
       payload: removedChars
     });
   }
@@ -193,7 +192,7 @@ class Document {
     this.document.splice(index, 0, newChar);
 
     broadcast({
-      operation: operations.REPLACE,
+      operation: OPERATIONS.REPLACE,
       payload: {
         removed: removedChars,
         added: newChar
@@ -206,14 +205,17 @@ class Document {
     this.insert_fromRemote(added);
   }
 
-  updateCursorPosition (userId, position) {
-    let cursor = this.cursors.get(userId);
-    if (cursor === undefined) {
-      cursor = createCursor(userId, position);
-    } else {
-      cursor = updateCursor(cursor, position);
+  updateCursor ({ user, pos }) {
+    let cursor = this.cursors.get(user);
+    cursor = cursor ? moveCursor(cursor, pos) : createCursor(user, pos);
+    this.cursors.set(user, cursor);
+  }
+
+  removeCursor (user) {
+    const cursor = this.cursors.get(user);
+    if (cursor) {
+      cursor.clear();
     }
-    this.cursors.set(userId, cursor);
   }
 
   /**

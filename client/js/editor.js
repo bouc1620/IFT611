@@ -6,19 +6,6 @@ const editor = new SimpleMDE({
   indentWithTabs: false
 });
 
-//key : userId, value : color
-const cursorsColor = new Map(
-  [[0, '#ff0000'],  // rouge
-  [1, '#ff6600'],   // orange
-  [2, '#0066ff'],   // bleu
-  [3, '#006600'],   // vert
-  [4, '#00ffff'],   // aqua
-  [5, '#ff00ff'],   // rose
-  [6, '#663300'],   // brun
-  [7, '#ffff00'],   // jaune
-  [8, '#6600ff'],   // mauve
-  [9, '#000000']]); // noir
-
 editor.codemirror.options.readOnly = 'nocursor';
 editor.codemirror.options.smartIndent = false;
 editor.codemirror.options.dragDrop = false;
@@ -43,36 +30,44 @@ editor.codemirror.on('change', (_instance, changeObj) => {
   }
 });
 
-editor.codemirror.on('cursorActivity', (_instance) => {
+editor.codemirror.on('cursorActivity', (instance) => {
   broadcast({
-    operation: operations.UPDATE_CURSOR,
-    user: self.id,
-    pos: _instance.getCursor()
+    operation: OPERATIONS.SEND_CURSOR,
+    payload: {
+      user: self.id,
+      pos: instance.getCursor()
+    }
   });
 });
 
-function createCursor (userId, pos) {
-  const cursorCoords = editor.codemirror.cursorCoords(pos);
+function createCursor (user, pos) {
+  const COLORS = [
+    '#ff0000',
+    '#ff6600',
+    '#0066ff',
+    '#00ffff',
+    '#ff00ff',
+    '#663300',
+    '#ffff00',
+    '#6600ff',
+    '#ff0066',
+    '#006633'
+  ];
 
-  let ligitUserId = parseInt(userId);
-  const numberMaxCursors = cursorsColor.size - 1;
-  if (ligitUserId > numberMaxCursors)
-    ligitUserId = numberMaxCursors;
+  const cursor = document.createElement('span');
+  cursor.classList.add('cursor');
 
-  const cursorColor = cursorsColor.get(ligitUserId);
-  const cursorBody = document.createElement('span');
-  cursorBody.style.borderLeftStyle = 'solid';
-  cursorBody.style.borderLeftWidth = '3px';
-  cursorBody.style.borderLeftColor = cursorColor;
-  cursorBody.style.height = `${(cursorCoords.bottom - cursorCoords.top)}px`;
-  cursorBody.style.padding = 0;
-  cursorBody.style.zIndex = 0;
+  cursor.style.borderLeftColor = COLORS[user % COLORS.length];
 
-  return editor.codemirror.setBookmark(pos, { widget: cursorBody });
+  const { _left, top, bottom } = editor.codemirror.cursorCoords(pos);
+  cursor.style.height = `${bottom - top}px`;
+
+  return editor.codemirror.setBookmark(pos, { widget: cursor });
 }
 
-function updateCursor (cursor, position) {
-  const nodeWidget = cursor.widgetNode;
+function moveCursor (cursor, pos) {
+  const widgetNode = cursor.widgetNode;
   cursor.clear();
-  return editor.codemirror.setBookmark(position, { widget: nodeWidget });
+
+  return editor.codemirror.setBookmark(pos, { widget: widgetNode });
 }
