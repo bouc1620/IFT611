@@ -1,11 +1,11 @@
-const OPERATIONS = {
-  INSERT: 0,
-  DELETE: 1,
-  REPLACE: 2,
-  REQUEST_DOCUMENT: 3,
-  SEND_DOCUMENT: 4,
-  REQUEST_CURSOR: 5,
-  SEND_CURSOR: 6
+const OPERATION = {
+  INSERT: 1,
+  DELETE: 2,
+  REPLACE: 3,
+  REQUEST_DOCUMENT: 4,
+  SEND_DOCUMENT: 5,
+  REQUEST_CURSOR: 6,
+  SEND_CURSOR: 7
 };
 
 const connections = [];
@@ -45,7 +45,7 @@ self.on('open', () => {
       if (peer == index) {
         link.on('open', () => {
           link.send(JSON.stringify({
-            operation: OPERATIONS.REQUEST_DOCUMENT,
+            operation: OPERATION.REQUEST_DOCUMENT,
             payload: null
           }));
         });
@@ -108,34 +108,34 @@ function receiveData (data, link) {
   data = JSON.parse(data);
 
   switch (data.operation) {
-    case OPERATIONS.INSERT:
+    case OPERATION.INSERT:
       documentData.insert_fromRemote(data.payload);
       break;
-    case OPERATIONS.DELETE:
+    case OPERATION.DELETE:
       documentData.delete_fromRemote(data.payload);
       break;
-    case OPERATIONS.REPLACE:
+    case OPERATION.REPLACE:
       documentData.replace_fromRemote(data.payload);
       break;
-    case OPERATIONS.REQUEST_DOCUMENT:
+    case OPERATION.REQUEST_DOCUMENT:
       link.send(JSON.stringify({
-        operation: OPERATIONS.SEND_DOCUMENT,
+        operation: OPERATION.SEND_DOCUMENT,
         payload: documentData.document
       }));
       break;
-    case OPERATIONS.SEND_DOCUMENT:
+    case OPERATION.SEND_DOCUMENT:
       documentData.copyDocument(data.payload);
       break;
-    case OPERATIONS.REQUEST_CURSOR:
+    case OPERATION.REQUEST_CURSOR:
       link.send(JSON.stringify({
-        operation: OPERATIONS.SEND_CURSOR,
+        operation: OPERATION.SEND_CURSOR,
         payload: {
           user: self.id,
           pos: editor.codemirror.getCursor()
         }
       }));
       break;
-    case OPERATIONS.SEND_CURSOR:
+    case OPERATION.SEND_CURSOR:
       documentData.updateCursor(data.payload);
       break;
     default:

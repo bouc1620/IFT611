@@ -1,0 +1,32 @@
+<html>
+
+<body>
+  <script src="wasm/data-module.js"></script>
+  <script>
+    function cArray_i32(size) {
+      const offset = Module._malloc(size * 4);
+      Module.HEAP32.set(new Int32Array(size), offset / 4);
+      return {
+        'data': Module.HEAP32.subarray(offset / 4, offset / 4 + size),
+        'offset': offset
+      }
+    }
+
+    Module.onRuntimeInitialized = function () {
+      const arr = cArray_i32(1000);
+
+      const DocumentData = new Module.Document(1, arr.offset);
+      const text = "Hello, World!";
+
+      for (let i = 0; i < text.length; ++i) {
+        DocumentData.insert_fromLocal(text[i].charCodeAt(0), i);
+      }
+
+      DocumentData.printDocument();
+
+      // instance.delete();
+    }
+  </script>
+</body>
+
+<html>

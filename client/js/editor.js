@@ -32,7 +32,7 @@ editor.codemirror.on('change', (_instance, changeObj) => {
 
 editor.codemirror.on('cursorActivity', (instance) => {
   broadcast({
-    operation: OPERATIONS.SEND_CURSOR,
+    operation: OPERATION.SEND_CURSOR,
     payload: {
       user: self.id,
       pos: instance.getCursor()
