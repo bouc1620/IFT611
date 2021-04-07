@@ -105,6 +105,7 @@ function broadcast (message) {
 }
 
 function receiveData (data, link) {
+  let t0 = performance.now();
   data = JSON.parse(data);
 
   switch (data.operation) {
@@ -141,4 +142,6 @@ function receiveData (data, link) {
     default:
       console.error(`received unexpected operation type : ${data.operation}`);
   }
+  let t1 = performance.now();
+  console.log(`Operation ` + data.operation + ` : ${t1 - t0} ms.`);
 }
