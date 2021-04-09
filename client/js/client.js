@@ -8,86 +8,76 @@ const OPERATION = {
   SEND_CURSOR: 7
 };
 
-const connections = [];
+let documentData;
+let peer;
+let connections;
 
-const self = new Peer(
-  peerID, {
-  host: '/',
-  port: '3000',
-  path: '/peerjs'
-});
+Module.onRuntimeInitialized = () => {
+  documentData = new Document(100);
 
-// connect to other peers when joining the network
-self.on('open', () => {
-  self.listAllPeers((peers) => {
-    let index = peers.indexOf(self.id);
-    if (index != -1) {
-      peers.splice(index, 1);
-    }
+  peer = new Peer(
+    peerID, {
+    host: '/',
+    port: '3000',
+    path: '/peerjs'
+  });
 
-    if (peers.length == 0) {
-      editor.codemirror.options.readOnly = false;
-      return;
-    }
+  connections = new Map();
 
-    peers.sort((a, b) => b - a);
-    index = peers.findIndex((peer) => peer < self.id);
-    if (index == -1) {
-      index = peers[peers.length - 1];
-    }
-    peers.reverse();
+  // connect to other peers when joining the network
+  peer.on('open', () => {
+    peer.listAllPeers((others) => {
+      others = others.filter((other) => other != peerID);
 
-    for (const peer of peers) {
-      let link = self.connect(peer);
-      link.on('data', (data) => receiveData(data, link));
-
-      // ask for a copy of the document
-      if (peer == index) {
-        link.on('open', () => {
-          link.send(JSON.stringify({
-            operation: OPERATION.REQUEST_DOCUMENT,
-            payload: null
-          }));
-        });
+      if (others.length == 0) {
+        editor.codemirror.options.readOnly = false;
+        return;
       }
 
-      connections.push({
-        id: peer,
-        link: link
-      });
-    }
+      others.sort((a, b) => b - a);
+      let index = others.findIndex((other) => other < peerID);
+      if (index == -1) {
+        index = others[others.length - 1];
+      }
+
+      for (const other of others) {
+        let link = peer.connect(other);
+        link.on('data', (data) => receiveData(data, link));
+
+        // ask for a copy of the document
+        if (other == index) {
+          link.on('open', () => {
+            link.send(JSON.stringify({
+              operation: OPERATION.REQUEST_DOCUMENT,
+              payload: null
+            }));
+          });
+        }
+
+        connections.set(other, link);
+      }
+    });
   });
-});
 
-// listen to new peers joining the network
-self.on('connection', (link) => {
-  link.on('data', (data) => receiveData(data, link));
-
-  // insertion into a sorted array
-  for (var index = connections.length - 1; index > 0; --index) {
-    if (connections[index].id < link.peer) {
-      index++;
-      break;
-    }
-  }
-
-  connections.splice(index, 0, {
-    id: link.peer,
-    link: link
+  // listen to new peers joining the network
+  peer.on('connection', (link) => {
+    link.on('data', (data) => receiveData(data, link));
+    connections.set(link.peer, link);
   });
-});
+};
 
 // filter out disconnected peers once in a while
-var refreshPeers = (() => {
-  const wait = 5; // the number of broadcasts between each refresh
+const refreshPeers = (() => {
+  const WAIT = 10; // the number of broadcasts between each check
   let current = 0;
+
   return () => {
-    if (current++ >= wait) {
-      self.listAllPeers((peers) => {
-        for (let i = connections.length - 1; i >= 0; i--) {
-          if (peers.findIndex((peer) => peer == connections[i].id) == -1) {
-            documentData.removeCursor(connections[i].id);
-            connections.splice(i, 1);
+    if (current++ >= WAIT) {
+      peer.listAllPeers((others) => {
+        for (const other of connections.keys()) {
+          if (others.find((other_) => other_ == other) == undefined) {
+            documentData.removeCursor(other);
+            connections.delete(other);
           }
         }
       });
@@ -96,14 +86,23 @@ var refreshPeers = (() => {
   };
 })();
 
+/**
+ * Broadcasts an operation on the document to the network
+ * @param {object} message
+ */
 function broadcast (message) {
   refreshPeers();
   message = JSON.stringify(message);
-  for (const conn of connections) {
-    conn.link.send(message);
+  for (const link of connections.values()) {
+    link.send(message);
   }
 }
 
+/**
+ * Receives operations on the document from other peers
+ * @param {JSON} data 
+ * @param {DataConnection} link 
+ */
 function receiveData (data, link) {
   data = JSON.parse(data);
 
@@ -120,7 +119,7 @@ function receiveData (data, link) {
     case OPERATION.REQUEST_DOCUMENT:
       link.send(JSON.stringify({
         operation: OPERATION.SEND_DOCUMENT,
-        payload: documentData.document
+        payload: documentData.getDocument()
       }));
       break;
     case OPERATION.SEND_DOCUMENT:
@@ -130,8 +129,8 @@ function receiveData (data, link) {
       link.send(JSON.stringify({
         operation: OPERATION.SEND_CURSOR,
         payload: {
-          user: self.id,
-          pos: editor.codemirror.getCursor()
+          user: peerID,
+          position: editor.codemirror.getCursor()
         }
       }));
       break;
@@ -139,6 +138,7 @@ function receiveData (data, link) {
       documentData.updateCursor(data.payload);
       break;
     default:
-      console.error(`received unexpected operation type : ${data.operation}`);
+      console.error('received unexpected operation type');
   }
 }
+

@@ -21,12 +21,12 @@ public:
     static const pos_vector_t posFirst;
 
 private:
-    // the text character
+    // the character's ASCII number
     chr_t chr;
-    // the author's peer id
-    usr_t usr;
     // a vector representing a Character's position in the document
     pos_vector_t pos;
+    // the author's peer id
+    usr_t usr;
 
 public:
     chr_t getChar() const;
@@ -42,8 +42,9 @@ public:
 
     bool operator==(const Character& other) const;
 
-    // adds the Character's position vector on the reserved space on the heap and returns its length
-    int posToHeap(pos_ptr_t posArray_offset) const;
+    // copies the Character's position vector to the heap followed by its character ASCII number and
+    // its author's id, returns the position vector's length
+    int characterToHeap(pos_ptr_t posArray_offset) const;
 
     // compares the char attributes of two Character instances
     static bool chrcmp(const Character& char1, const Character& char2);

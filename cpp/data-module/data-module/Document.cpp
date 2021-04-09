@@ -14,10 +14,12 @@ EMSCRIPTEN_BINDINGS(document_bindings) {
     class_<Document>("Document")
         .constructor<Document::usr_t, uintptr_t>()
         .function("updateArrayOffset", &Document::updateArrayOffset, allow_raw_pointers())
+        .function("size", &Document::size)
+        .function("getCharacterAt", &Document::getCharacterAt)
         .function("pushNextCharacter", &Document::pushNextCharacter)
         .function("insert_fromLocal", &Document::insert_fromLocal)
-        .function("insert_fromRemote", &Document::insert_fromRemote)
         .function("delete_fromLocal", &Document::delete_fromLocal)
+        .function("insert_fromRemote", &Document::insert_fromRemote)
         .function("delete_fromRemote", &Document::delete_fromRemote)
         .function("printDocument", &Document::printDocument)
         ;
@@ -31,6 +33,14 @@ Document::Document(usr_t self, uintptr_t posArray_offset)
 
 void Document::updateArrayOffset(uintptr_t posArray_offset) {
     this->posArray_offset = reinterpret_cast<pos_ptr_t>(posArray_offset);
+}
+
+int Document::size() {
+    return doc.size();
+}
+
+int Document::getCharacterAt(int idx) {
+    return doc[idx].characterToHeap(posArray_offset);
 }
 
 void Document::pushNextCharacter(chr_t chr, usr_t usr, int len) {
@@ -62,7 +72,7 @@ int Document::insert_fromLocal(chr_t chr, int idx) {
 
     doc.insert(doc.begin() + idx, Character(chr, self, pos));
 
-    int len = (doc.begin() + idx)->posToHeap(posArray_offset);
+    int len = (doc.begin() + idx)->characterToHeap(posArray_offset);
     return len;
 }
 
@@ -70,8 +80,8 @@ int Document::insert_fromRemote(chr_t chr, usr_t usr, int len) {
     // first search the deletion backlog to see if a delete operation
     // was received for the Character before its insert operation
     Character toInsert = Character(chr, usr, posArray_offset, len);
-
     vector<Character>::iterator rmv = find(delBacklog.begin(), delBacklog.end(), toInsert);
+
     if (rmv != delBacklog.end()) {
         delBacklog.erase(rmv);
 
@@ -88,7 +98,7 @@ int Document::insert_fromRemote(chr_t chr, usr_t usr, int len) {
 int Document::delete_fromLocal(int idx) {
     vector<Character>::iterator toRemove = doc.begin() + idx;
 
-    int len = toRemove->posToHeap(posArray_offset);
+    int len = toRemove->characterToHeap(posArray_offset);
 
     doc.erase(toRemove);
 
@@ -137,17 +147,6 @@ pair<bool, int> Document::findCharIndex(const Character& chr) {
             else {
                 // the Character was found, return its index
                 return pair<bool, size_t>(Character::chrcmp(chr, doc[k]), k);
-
-                // TODO: c'est pas 100% certain que le caractère trouvé est identique à
-                //       celui cherché. un utilisateur peut insérer, supprimer et insérer
-                //       à nouveau un caractère au même endroit, les vecteurs de positions
-                //       pourraient être identiques. si le caractère d'entre les deux insertions
-                //       était différent et que les messages d'insertion étaient reçus dans le
-                //       désordre, on déterminerait à tort avoir trouvé le bon caractère.
-                //       on doit implémenter un compteur d'instructions pour chacun des peer
-                //       pour garantir l'ordre des messages reçus.
-                //
-                //       possible que ce TODO ne soit pas complété par manque de temps...
             }
         }
 
@@ -162,7 +161,12 @@ void Document::printDocument() const {
     cout << "taille du document: " << doc.size() << "\n";
 
     for (vector<Character>::const_iterator it = doc.cbegin(); it != doc.cend(); ++it) {
-        cout << char(it->getChar());
+        if (it->getChar() != 10) {
+            cout << char(it->getChar());
+        }
+        else {
+            cout << endl;
+        }
     }
 
     cout << flush;

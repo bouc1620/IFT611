@@ -6,16 +6,9 @@ using namespace std;
 
 const Character::pos_vector_t posFirst({ Character::POS_MID });
 
-
-
-
 Character::chr_t Character::getChar() const {
     return chr;
 }
-
-
-
-
 
 Character::Character(chr_t chr, usr_t usr, pos_ptr_t pos, int len)
     : chr(chr), usr(usr), pos(pos, pos + len) {};
@@ -31,14 +24,18 @@ bool Character::operator==(const Character& other) const {
     return chrcmp(*this, other) && usrcmp(*this, other) == 0 && poscmp(*this, other) == 0;
 }
 
-int Character::posToHeap(pos_ptr_t posArray_offset) const {
+int Character::characterToHeap(pos_ptr_t posArray_offset) const {
 
     // TODO: réallouer l'espace sur le tas si le vecteur de position à envoyer est trop
-    //       grand et communiquer l'adresse de la nouvelle mémoire allouée à Document
+    //       grand et communiquer l'adresse de la nouvelle mémoire allouée et la taille
+    //       de l'espace à Document
 
     for (pos_vector_t::const_iterator it = pos.cbegin(); it != pos.cend(); ++it) {
         posArray_offset[it - pos.cbegin()] = *it;
     }
+
+    posArray_offset[pos.size()] = this->chr;
+    posArray_offset[pos.size() + 1] = this->usr;
 
     return (int)pos.size();
 }
