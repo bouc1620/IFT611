@@ -8,7 +8,7 @@ using namespace std;
 class Character {
 public:
     using chr_t = int;
-    using usr_t = uint32_t;
+    using usr_t = int;
     using pos_t = int32_t;
     using pos_ptr_t = pos_t*;
     using pos_vector_t = vector<pos_t>;

@@ -18,6 +18,4 @@ then
   cd cpp/test
   printf "\nLe serveur test écoute sur le port 8000."
   python -m http.server
-else
-  printf "\nUtilisez l'option -s pour tester le module WebAssembly compilé dans un navigateur."
 fi

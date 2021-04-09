@@ -25,10 +25,9 @@ bool Character::operator==(const Character& other) const {
 }
 
 int Character::characterToHeap(pos_ptr_t posArray_offset) const {
-
-    // TODO: réallouer l'espace sur le tas si le vecteur de position à envoyer est trop
-    //       grand et communiquer l'adresse de la nouvelle mémoire allouée et la taille
-    //       de l'espace à Document
+    // TODO: rÃ©allouer l'espace sur le tas si le vecteur de position Ã  envoyer est trop
+    //       grand et communiquer l'adresse de la nouvelle mÃ©moire allouÃ©e et la taille
+    //       du nouvel espace Ã  Document
 
     for (pos_vector_t::const_iterator it = pos.cbegin(); it != pos.cend(); ++it) {
         posArray_offset[it - pos.cbegin()] = *it;
