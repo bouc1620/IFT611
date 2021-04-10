@@ -12,6 +12,10 @@ editor.codemirror.options.dragDrop = false;
 editor.codemirror.setOption('extraKeys', { Enter: (cm) => cm.replaceSelection('\n') });
 
 editor.codemirror.on('change', (_instance, changeObj) => {
+
+  if (changeObj.origin === undefined)
+    return;
+
   if (changeObj.origin == '+input') {
     if (changeObj.removed == '') {
       let char = changeObj.text.length > 1 ? '\n' : changeObj.text[0];

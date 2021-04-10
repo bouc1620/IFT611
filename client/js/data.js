@@ -146,6 +146,7 @@ class Document {
   }
 
   insert_fromRemote (char) {
+    let t2 = performance.now();
     // search the deletion backlog to see if a delete operation was received for the Character
     let index = this.deletionBacklog.findIndex((charToRemove) => Character.equals(char, charToRemove));
     if (index != -1) {
@@ -156,6 +157,8 @@ class Document {
     index = this.findCharIndex(char).index;
 
     this.document.splice(index, 0, char);
+    let t3 = performance.now();
+    console.log(`Operation own code : ${t3 - t2} ms.`);
     editor.codemirror.replaceRange(char.char, editor.codemirror.posFromIndex(index));
   }
 
