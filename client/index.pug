@@ -9,12 +9,19 @@ html
         script(src='https://code.jquery.com/jquery-3.5.1.slim.min.js')
         script(src='https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js')
         script(src='https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js')
-        script(src='https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js')
+        script(src='https://unpkg.com/peerjs@1.3.2/dist/peerjs.min.js')
+        script(src='https://chancejs.com/chance.min.js')
         script.
             peerID='#{peerID}';
         script(defer, src='js/editor.js')
         script(defer, src='js/client.js')
         script(defer, src='js/data.js')
+        script(defer, src='js/gremlins.min.js')
+        script(defer, src='js/test-bot.js')
     body
+        button#test-bot-insert test-bot (Insert)
+        button#test-bot-delete test-bot (Delete)
+        button#test-bot-replace test-bot (Replace)
+        button#test-bot-network test-bot (Network)
         div.form-group.container-fluid.h-100
             textarea#editor
