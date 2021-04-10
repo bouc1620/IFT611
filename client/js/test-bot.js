@@ -94,7 +94,7 @@ function networkTest ({ logger, randomizer, window }) {
     const t0 = performance.now();
     networkTimeMap.set(id_map, t0);
     broadcast({
-      operation: OPERATIONS.SEND_TEST_NETWORK,
+      operation: OPERATION.SEND_TEST_NETWORK,
       payload: {
         id_map: id_map,
         char: characters
