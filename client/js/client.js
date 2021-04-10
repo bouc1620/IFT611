@@ -10,11 +10,27 @@ const OPERATION = {
   RECEIVE_TEST_NETWORK: 9
 };
 
-let documentData;
-let peer;
-let connections;
+const OPERATION_STR = [
+  "UNDEFINED",
+  "INSERT",
+  "DELETE",
+  "REPLACE",
+  "REQUEST_DOCUMENT",
+  "SEND_DOCUMENT",
+  "REQUEST_CURSOR",
+  "SEND_CURSOR",
+  "SEND_TEST_NETWORK",
+  "RECEIVE_TEST_NETWORK"
+];
 
-// start the app once the WebAssembly module is fully loaded
+// Document class instance
+let documentData;
+// Peer object for this peer
+let peer;
+// Maps the peer's id to their connection object
+const connections = new Map();
+
+// connect on the network and start the app once the WebAssembly module is loaded
 Module.onRuntimeInitialized = () => {
   documentData = new Document(1000);
 
@@ -24,8 +40,6 @@ Module.onRuntimeInitialized = () => {
     port: '3000',
     path: '/peerjs'
   });
-
-  connections = new Map();
 
   // connect to other peers when joining the network
   peer.on('open', () => {
@@ -70,7 +84,8 @@ Module.onRuntimeInitialized = () => {
 };
 
 /**
- * A closure that filters out disconnected peers after a number of operations broadcast
+ * A closure that filters out disconnected peers after a certain count of operations
+ * broadcast
  */
 const refreshPeers = (function () {
   const WAIT = 10; // the number of broadcasts between each verification
@@ -109,7 +124,8 @@ function broadcast (message) {
  * @param {DataConnection} link 
  */
 function receiveData (data, link) {
-  let t0 = performance.now();
+  const t0 = performance.now();
+  
   data = JSON.parse(data);
 
   switch (data.operation) {
@@ -150,16 +166,17 @@ function receiveData (data, link) {
       }));
       break;
     case OPERATIONS.RECEIVE_TEST_NETWORK:
-      let timeBefore = networkTimeMap.get(data.payload.id_map);
-      let timeAfter = t0;
+      const timeBefore = networkTimeMap.get(data.payload.id_map);
+      const timeAfter = t0;
 
-      //Divide by 2, because double times to send and received packet
-      let timeAverage = (timeAfter - timeBefore) / 2;
+      // divide by 2, because double times to send and received packet
+      const timeAverage = (timeAfter - timeBefore) / 2;
       networkTimes.push(timeAverage);
       break;
     default:
       console.error('received unexpected operation type');
   }
-  let t1 = performance.now();
-  console.log(`Operation ` + data.operation + ` : ${t1 - t0} ms.`);
+  
+  const t1 = performance.now();
+  console.log(`Operation #${data.operation}, ${OPERATION_STR[data.operation]} : ${t1 - t0} ms.`);
 }
