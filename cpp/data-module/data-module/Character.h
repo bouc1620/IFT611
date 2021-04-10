@@ -9,15 +9,13 @@ using namespace std;
 
 class Character {
 public:
-    using chr_t = int;
-    using usr_t = int;
-    using pos_t = int32_t;
+    using chr_t = int16_t;
+    using usr_t = int16_t;
+    using pos_t = int16_t;
     using pos_ptr_t = pos_t*;
     using pos_vector_t = vector<pos_t>;
 
-    static const pos_t POS_MIN = 1;
-    static const pos_t POS_MID = static_cast<pos_t>(1) << 15;
-    static const pos_t POS_MAX = static_cast<pos_t>(1) << 30;
+    static const pos_t POS_BEGIN = 0;
 
     // the position vector of the first Character in a document
     static const pos_vector_t posFirst;
@@ -31,8 +29,6 @@ private:
     usr_t usr;
 
 public:
-    chr_t getChar() const;
-
     Character() = default;
 
     // Character constructor from raw data received from JavaScript
@@ -50,10 +46,12 @@ public:
         else if (obj.chr == 9) { chr_ = "\\t"; }
         else { chr_ = string(1, char(obj.chr)); }
 
-        return os << "{ chr: " << chr_ << ", usr: " << obj.usr << ", pos: " << obj.getPosStr() << " }";
+        return os << "{ chr: " << chr_ << ", usr: " << obj.usr << ", pos: " << obj.posVectorToString() << " }";
     }
 
-    string getPosStr() const;
+    chr_t getChar() const;
+
+    string posVectorToString() const;
 
     // friend ostream& operator<<(ostream& os, const Character& obj);
 

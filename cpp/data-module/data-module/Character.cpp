@@ -2,7 +2,7 @@
 
 using namespace std;
 
-const Character::pos_vector_t Character::posFirst({ Character::POS_MID });
+const Character::pos_vector_t Character::posFirst({ Character::POS_BEGIN });
 
 Character::Character(chr_t chr, usr_t usr, pos_ptr_t pos, int len)
     : chr(chr), usr(usr), pos(pos_vector_t(pos, pos + len)) {};
@@ -20,7 +20,7 @@ bool Character::operator==(const Character& other) const {
 
 Character::chr_t Character::getChar() const { return chr; }
 
-string Character::getPosStr() const {
+string Character::posVectorToString() const {
     string posStr = "[ ";
     for (pos_vector_t::const_iterator it = pos.cbegin(); it != pos.cend(); ++it) {
         posStr += to_string(*it);
@@ -42,6 +42,15 @@ int Character::characterToHeap(pos_ptr_t posArray_offset) const {
 
     posArray_offset[pos.size()] = this->chr;
     posArray_offset[pos.size() + 1] = this->usr;
+
+    //string posStr = "[ ";
+    //for (int i = 0; i < pos.size() + 2; ++i) {
+    //    posStr += to_string(posArray_offset[i]);
+    //    posStr += (i + 1 != (pos.size() + 2) ? ", " : " ");
+    //}
+    //posStr += "]";
+
+    //cout << posStr << endl;
 
     return (int)pos.size();
 }
@@ -87,29 +96,14 @@ int Character::poscmp(const pos_vector_t& pos1, const pos_vector_t& pos2) {
 
 Character::pos_vector_t Character::posBefore(const Character& after) {
     pos_vector_t posBefore = pos_vector_t({ after.pos });
-
-    if (posBefore.back() <= POS_MIN) {
-        posBefore[posBefore.size() - 1] -= 1;
-    }
-    else {
-        posBefore[posBefore.size() - 1] >>= 1;
-    }
+    posBefore[posBefore.size() - 1] -= 1;
 
     return posBefore;
 }
 
 Character::pos_vector_t Character::posAfter(const Character& before) {
     pos_vector_t posAfter = pos_vector_t({ before.pos });
-
-    if (posAfter.back() < POS_MIN) {
-        posAfter[posAfter.size() - 1] += 1;
-    }
-    else if (posAfter.back() < POS_MAX) {
-        posAfter[posAfter.size() - 1] <<= 1;
-    }
-    else {
-        posAfter.push_back(POS_MID);
-    }
+    posAfter[posAfter.size() - 1] += 1;
 
     return posAfter;
 }
@@ -123,13 +117,8 @@ Character::pos_vector_t Character::posBetween(const Character& before, const Cha
     int compare = poscmp(posBetween, posAfter);
 
     if (compare == 0) {
-        if (posBefore.back() != POS_MAX) {
-            posBetween[posBetween.size() - 1] = posBefore.back();
-            posBetween.push_back(POS_MID);
-        }
-        else {
-            posBetween[posBetween.size() - 1] >>= 1;
-        }
+        posBetween = posBefore;
+        posBetween.push_back(POS_BEGIN);
     }
     else if (compare == 1) {
         posBetween = Character::posBefore(after);
@@ -137,7 +126,7 @@ Character::pos_vector_t Character::posBetween(const Character& before, const Cha
         compare = poscmp(posBefore, posBetween);
 
         if (compare != -1) {
-            posBetween.push_back(POS_MID);
+            posBetween.push_back(POS_BEGIN);
         }
     }
 

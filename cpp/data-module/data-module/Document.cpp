@@ -1,3 +1,4 @@
+#include <unordered_map>
 #include <iostream>
 #include <vector>
 
@@ -126,9 +127,26 @@ void Document::printDocument() const {
     cout << "--- Module WebAssembly ---" << endl;
     cout << "taille du document: " << doc.size() << endl;
 
+    string docStr = "";
     for (vector<Character>::const_iterator it = doc.cbegin(); it != doc.cend(); ++it) {
-        cout << (*it) << endl;
+        if (it->getChar() == 9) {
+            docStr += "\t";
+        }
+        else if (it->getChar() == 10) {
+            docStr += "\n";
+        }
+        else {
+            docStr += it->getChar();
+        }
     }
+    cout << docStr << endl;
+
+    hash<string> hasher;
+    cout << "hash: " << to_string(hasher(docStr)) << endl;
+
+    //for (vector<Character>::const_iterator it = doc.cbegin(); it != doc.cend(); ++it) {
+    //    cout << (*it) << endl;
+    //}
 }
 
 pair<bool, int> Document::findCharIndex(const Character& chr) {

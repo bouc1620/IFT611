@@ -18,7 +18,7 @@ public:
 private:
     // this peer's id
     usr_t self;
-    // the address of the signed Int32 array on the heap used to exchange position vectors
+    // the address of the signed Int16 array on the heap used to exchange position vectors
     // between JavaScript and WebAssembly
     pos_ptr_t posArray_offset;
     // the synchronized content of the collaborative text editor
@@ -29,7 +29,7 @@ private:
 public:
     Document() = delete;
 
-    // Document constructor with peer id and the address of the signed Int32 array on the heap
+    // Document constructor with peer id and the address of the signed Int16 array on the heap
     // used to exchange position vectors between JavaScript and WebAssembly
     Document(usr_t self, uintptr_t posArray_offset);
 

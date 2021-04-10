@@ -12,8 +12,8 @@ class Character {
  */
 class Document {
   constructor (size) {
-    // shared i32 array between JavaScript and WebAssembly
-    this.sharedMemory = this.allocateArray_i32(size);
+    // shared i16 array between JavaScript and WebAssembly
+    this.sharedMemory = this.allocateArray_i16(size);
     // the WebAssembly Document instance
     this.instance = new Module.Document(parseInt(peerID), this.sharedMemory.offset);
     // keeps track of the other peers cursors position
@@ -35,17 +35,17 @@ class Document {
   }
 
   /**
-   * Allocates memory for a signed i32 array on the heap to exchange position vectors between
+   * Allocates memory for a signed i16 array on the heap to exchange position vectors between
    * JavaScript and WebAssembly 
    * @param {number} size 
-   * @returns {object {array: Int32Array, address: number}} 
+   * @returns {object {array: Int16Array, address: number}} 
    */
-  allocateArray_i32 (size) {
-    const offset = Module._malloc(size << 2);
-    Module.HEAP32.set(new Int32Array(size), (offset >> 2));
+  allocateArray_i16 (size) {
+    const offset = Module._malloc(size << 1);
+    Module.HEAP16.set(new Int16Array(size), (offset >> 1));
 
     return {
-      array: Module.HEAP32.subarray((offset >> 2), (offset >> 2) + size),
+      array: Module.HEAP16.subarray((offset >> 1), (offset >> 1) + size),
       offset
     };
   }

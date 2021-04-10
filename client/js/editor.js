@@ -15,22 +15,32 @@ editor.codemirror.on('change', (_instance, changeObj) => {
   if (changeObj.origin == '+input') {
     if (changeObj.removed == '') {
       // one or more characters inserted
-      const chars = changeObj.text.length > 1 ? '\n' : changeObj.text[0];
+      let chars;
+      if (changeObj.text.length == 2 && changeObj.text[0] == '' && changeObj.text[1] == '') {
+        chars = '\n';
+      } else {
+        chars = changeObj.text.join('\n');
+      }
       const index = editor.codemirror.indexFromPos(changeObj.to);
       documentData.insert_fromLocal(chars, index);
     } else {
       // range replaced
-      let char = changeObj.text.length > 1 ? '\n' : changeObj.text[0];
-      let index = editor.codemirror.indexFromPos(changeObj.from);
-      let length = changeObj.removed.reduce((total, current) => {
+      let chars;
+      if (changeObj.text.length == 2 && changeObj.text[0] == '' && changeObj.text[1] == '') {
+        chars = '\n';
+      } else {
+        chars = changeObj.text.join('\n');
+      }
+      const index = editor.codemirror.indexFromPos(changeObj.from);
+      const length = changeObj.removed.reduce((total, current) => {
         return total + current.length;
       }, 0) + changeObj.removed.length - 1;
-      documentData.replace_fromLocal(char, index, length);
+      documentData.replace_fromLocal(chars, index, length);
     }
   } else if (changeObj.origin == '+delete') {
     // character deleted
-    let index = editor.codemirror.indexFromPos(changeObj.from);
-    let length = changeObj.removed.reduce((total, current) => {
+    const index = editor.codemirror.indexFromPos(changeObj.from);
+    const length = changeObj.removed.reduce((total, current) => {
       return total + current.length;
     }, 0) + changeObj.removed.length - 1;
     documentData.delete_fromLocal(index, length);

@@ -14,7 +14,7 @@ let connections;
 
 // start the app once the WebAssembly module is fully loaded
 Module.onRuntimeInitialized = () => {
-  documentData = new Document(1000);
+  documentData = new Document(50);
 
   peer = new Peer(
     peerID, {
