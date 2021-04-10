@@ -3,8 +3,7 @@ const editor = new SimpleMDE({
   spellChecker: false,
   toolbar: false,
   status: false,
-  indentWithTabs: false,
-  readOnly: 'nocursor'
+  indentWithTabs: false
 });
 
 editor.codemirror.options.readOnly = 'nocursor';
@@ -15,10 +14,10 @@ editor.codemirror.setOption('extraKeys', { Enter: (command) => command.replaceSe
 editor.codemirror.on('change', (_instance, changeObj) => {
   if (changeObj.origin == '+input') {
     if (changeObj.removed == '') {
-      // character inserted
-      let char = changeObj.text.length > 1 ? '\n' : changeObj.text[0];
-      let index = editor.codemirror.indexFromPos(changeObj.to);
-      documentData.insert_fromLocal(char, index);
+      // one or more characters inserted
+      const chars = changeObj.text.length > 1 ? '\n' : changeObj.text[0];
+      const index = editor.codemirror.indexFromPos(changeObj.to);
+      documentData.insert_fromLocal(chars, index);
     } else {
       // range replaced
       let char = changeObj.text.length > 1 ? '\n' : changeObj.text[0];
@@ -38,15 +37,39 @@ editor.codemirror.on('change', (_instance, changeObj) => {
   }
 });
 
-editor.codemirror.on('cursorActivity', (instance) => {
-  broadcast({
-    operation: OPERATION.SEND_CURSOR,
-    payload: {
-      user: peerID,
-      pos: instance.getCursor()
+const onCursorActivity = (function () {
+  const DELAY = 50;
+
+  let last = undefined;
+  let timeoutHandle = undefined;
+
+  const sendCursor = () => {
+    broadcast({
+      operation: OPERATION.SEND_CURSOR,
+      payload: {
+        user: peerID,
+        position: editor.codemirror.getCursor()
+      }
+    });
+  };
+
+  return () => {
+    const now = performance.now();
+    const diff = last ? now - last : Infinity;
+    last = now;
+
+    if (diff < DELAY) {
+      if (timeoutHandle != undefined) {
+        clearTimeout(timeoutHandle);
+      }
+      timeoutHandle = setTimeout(sendCursor, DELAY);
+    } else {
+      sendCursor();
     }
-  });
-});
+  };
+})();
+
+editor.codemirror.on('cursorActivity', onCursorActivity);
 
 const CURSORS_COLORS = [
   '#ff0000',
@@ -74,6 +97,8 @@ function createCursor (user, position) {
 }
 
 function moveCursor (cursor, position) {
+  const widgetNode = cursor.widgetNode;
   cursor.clear();
-  return editor.codemirror.setBookmark(position, { widget: cursor.widgetNode });
+
+  return editor.codemirror.setBookmark(position, { widget: widgetNode });
 }

@@ -63,7 +63,7 @@ public:
     // if the Character was added to the deletion backlog
     int delete_fromRemote(chr_t chr, usr_t usr, int len);
 
-    // prints the document, for debugging
+    // prints the document's content, for debugging
     void printDocument() const;
 
 private:

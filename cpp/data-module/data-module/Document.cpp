@@ -63,7 +63,7 @@ int Document::insert_fromLocal(chr_t chr, int idx) {
     }
     else if (doc.size() == idx) {
         // Character inserted at the end of a document
-        pos = Character::posAfter(doc.front());
+        pos = Character::posAfter(doc.back());
     }
     else {
         // Character inserted between 2 others
@@ -77,8 +77,8 @@ int Document::insert_fromLocal(chr_t chr, int idx) {
 }
 
 int Document::insert_fromRemote(chr_t chr, usr_t usr, int len) {
-    // first search the deletion backlog to see if a delete operation
-    // was received for the Character before its insert operation
+    // first search the deletion backlog to see if a delete operation was received for the
+    // Character before its insert operation
     Character toInsert = Character(chr, usr, posArray_offset, len);
     vector<Character>::iterator rmv = find(delBacklog.begin(), delBacklog.end(), toInsert);
 
@@ -89,6 +89,7 @@ int Document::insert_fromRemote(chr_t chr, usr_t usr, int len) {
     }
     else {
         pair<bool, int> res = findCharIndex(toInsert);
+
         doc.insert(doc.begin() + res.second, toInsert);
 
         return res.second;
@@ -121,12 +122,22 @@ int Document::delete_fromRemote(chr_t chr, usr_t usr, int len) {
     }
 }
 
+void Document::printDocument() const {
+    cout << "--- Module WebAssembly ---" << endl;
+    cout << "taille du document: " << doc.size() << endl;
+
+    for (vector<Character>::const_iterator it = doc.cbegin(); it != doc.cend(); ++it) {
+        cout << (*it) << endl;
+    }
+}
+
 pair<bool, int> Document::findCharIndex(const Character& chr) {
-    size_t low = 0;
-    size_t high = doc.size() - 1;
+    int low = 0;
+    int high = (int)doc.size() - 1;
 
     while (low <= high) {
-        size_t k = (low + high) >> 1;
+        int k = (low + high) >> 1;
+
         int compare = Character::poscmp(chr, doc[k]);
 
         if (compare == 1) {
@@ -154,20 +165,4 @@ pair<bool, int> Document::findCharIndex(const Character& chr) {
 
     // the correct insertion index was found
     return pair<bool, size_t>(false, high + 1);
-}
-
-void Document::printDocument() const {
-    cout << "du module WebAssembly:\n";
-    cout << "taille du document: " << doc.size() << "\n";
-
-    for (vector<Character>::const_iterator it = doc.cbegin(); it != doc.cend(); ++it) {
-        if (it->getChar() != 10) {
-            cout << char(it->getChar());
-        }
-        else {
-            cout << endl;
-        }
-    }
-
-    cout << flush;
 }

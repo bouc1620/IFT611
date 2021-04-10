@@ -2,6 +2,8 @@
 #define CHARACTER_H
 
 #include <vector>
+#include <string>
+#include <iostream>
 
 using namespace std;
 
@@ -41,6 +43,19 @@ public:
     bool operator!=(const Character& other) const;
 
     bool operator==(const Character& other) const;
+
+    friend ostream& operator<<(ostream& os, const Character& obj) {
+        string chr_;
+        if (obj.chr == 10) { chr_ = "\\n"; }
+        else if (obj.chr == 9) { chr_ = "\\t"; }
+        else { chr_ = string(1, char(obj.chr)); }
+
+        return os << "{ chr: " << chr_ << ", usr: " << obj.usr << ", pos: " << obj.getPosStr() << " }";
+    }
+
+    string getPosStr() const;
+
+    // friend ostream& operator<<(ostream& os, const Character& obj);
 
     // copies the Character's position vector to the heap followed by its character ASCII number and
     // its author's id, returns the position vector's length

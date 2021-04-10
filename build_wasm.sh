@@ -9,7 +9,7 @@ docker run --rm -v /$(pwd):/src emscripten/emsdk \
   emcc --bind -O2 -s "EXPORTED_FUNCTIONS=['_malloc', '_free']" \
   -s ALLOW_MEMORY_GROWTH=1 -s WASM=1 \
   cpp/data-module/data-module/Document.cpp cpp/data-module/data-module/Character.cpp \
-  -o client/wasm/data-module.js
+  -o client/wasm/data_module.js
 set +x
 
 if  [[ $1 = "-s" ]];

@@ -13,9 +13,9 @@ class Character {
 class Document {
   constructor (size) {
     // shared i32 array between JavaScript and WebAssembly
-    this.sharedMemory = this.AllocateArray_i32(size);
+    this.sharedMemory = this.allocateArray_i32(size);
     // the WebAssembly Document instance
-    this.instance = new Module.Document(peerID, this.sharedMemory.offset);
+    this.instance = new Module.Document(parseInt(peerID), this.sharedMemory.offset);
     // keeps track of the other peers cursors position
     this.cursors = new Map();
   }
@@ -28,7 +28,7 @@ class Document {
 
   removeCursor (user) {
     const cursor = this.cursors.get(user);
-    if (cursor) {
+    if (cursor != undefined) {
       cursor.clear();
       this.cursors.delete(user);
     }
@@ -40,7 +40,7 @@ class Document {
    * @param {number} size 
    * @returns {object {array: Int32Array, address: number}} 
    */
-  AllocateArray_i32 (size) {
+  allocateArray_i32 (size) {
     const offset = Module._malloc(size << 2);
     Module.HEAP32.set(new Int32Array(size), (offset >> 2));
 
@@ -51,7 +51,7 @@ class Document {
   }
 
   /**
-   * Transfers a JavaScript array containing a position vector on to the heap
+   * Transfers a JavaScript array containing a position vector onto the heap
    * @param {number[]} pos 
    */
   posToHeap (pos) {
@@ -66,8 +66,8 @@ class Document {
    * @returns {Character} retrieved Character object
    */
   charFromHeap (len) {
-    const char = this.sharedMemory.array[len];
-    const pos = this.sharedMemory.array.slice(0, len);
+    const char = String.fromCharCode(this.sharedMemory.array[len]);
+    const pos = Array.prototype.slice.call(this.sharedMemory.array, 0, len);
     const user = this.sharedMemory.array[len + 1];
 
     return new Character(char, pos, user);
@@ -85,9 +85,7 @@ class Document {
     }
 
     // copy each character in the editor
-    editor.codemirror.setValue(document.map((newChar) =>
-      String.fromCharCode(newChar.char)).join('')
-    );
+    editor.codemirror.setValue(document.map((newChar) => newChar.char).join(''));
     editor.codemirror.setOption('readOnly', false);
 
     // send own and request others cursor positions
@@ -123,18 +121,21 @@ class Document {
   }
 
   /**
-   * Sends a Character written in the editor to the Document instance and broadcasts it to other
-   * peers
-   * @param {string} char 
+   * Inserts one or more Characters written in the editor into the Document instance and broadcasts
+   * the operation to the other peers
+   * @param {string} newChars 
    * @param {number} index 
    */
-  insert_fromLocal (char, index) {
-    const len = this.instance.insert_fromLocal(char.charCodeAt(0), index);
-    const newChar = this.charFromHeap(len);
+  insert_fromLocal (newChars, index) {
+    const charArray = [];
+    for (let i = 0; i < newChars.length; ++i) {
+      const len = this.instance.insert_fromLocal(newChars.charCodeAt(i), index + i);
+      charArray.push(this.charFromHeap(len));
+    }
 
     broadcast({
       operation: OPERATION.INSERT,
-      payload: newChar
+      payload: charArray
     });
   }
 
@@ -146,7 +147,7 @@ class Document {
    */
   delete_fromLocal (index, length) {
     const deletedChars = [];
-    for (let i = 0; i < length; ++i) {
+    for (let i = length - 1; i >= 0; --i) {
       const len = this.instance.delete_fromLocal(index + i);
       deletedChars.push(this.charFromHeap(len));
     }
@@ -160,38 +161,46 @@ class Document {
   /**
    * Replaces a range of Characters from the Document instance with a single new Character and
    * broadcasts the operation on the network
-   * @param {string} char 
+   * @param {string[]} newChars 
    * @param {number} index 
    * @param {number} length 
    */
-  replace_fromLocal (char, index, length) {
+  replace_fromLocal (newChars, index, length) {
     const deletedChars = [];
-    for (let i = 0; i < length; ++i) {
+    for (let i = length - 1; i >= 0; --i) {
       const len = this.instance.delete_fromLocal(index + i);
       deletedChars.push(this.charFromHeap(len));
     }
 
-    const len = this.instance.insert_fromLocal(char.charCodeAt(0), index);
-    const newChar = this.charFromHeap(len);
+    const insertedChars = [];
+    for (let i = 0; i < newChars.length; ++i) {
+      const len = this.instance.insert_fromLocal(newChars.charCodeAt(i), index + i);
+      insertedChars.push(this.charFromHeap(len));
+    }
 
     broadcast({
       operation: OPERATION.REPLACE,
       payload: {
         deletedChars,
-        newChar
+        insertedChars
       }
     });
   }
 
   /**
-   * Sends a Character written by a peer to the Document instance and inserts it inside the editor
-   * @param {Character} newChar 
+   * Inserts one or more Characters written by a peer into the Document instance as well as in the
+   * editor
+   * @param {Character[]} newChars 
    */
-  insert_fromRemote (newChar) {
-    this.posToHeap(newChar.pos);
-    index = this.instance.insert_fromRemote(newChar.char.charCodeAt(0), newChar.user, newChar.pos.length);
+  insert_fromRemote (newChars) {
+    for (const newChar of newChars) {
+      this.posToHeap(newChar.pos);
+      const index = this.instance.insert_fromRemote(newChar.char.charCodeAt(0), newChar.user, newChar.pos.length);
 
-    editor.codemirror.replaceRange(newChar.char, editor.codemirror.posFromIndex(index));
+      if (index != -1) {
+        editor.codemirror.replaceRange(newChar.char, editor.codemirror.posFromIndex(index));
+      }
+    }
   }
 
   /**
@@ -212,12 +221,12 @@ class Document {
   }
 
   /**
-   * Replaces a list of Characters received from a peer from the Document instance and inserts a
-   * new Character in their place
-   * @param {{Character[], Character}} { deletedChars, newChar } 
+   * Replaces a list of Characters received from a peer from the Document instance and inserts one
+   * or more Characters in their place
+   * @param {object {Character[], Character[]}} { deletedChars, insertedChars } 
    */
-  replace_fromRemote ({ deletedChars, newChar }) {
+  replace_fromRemote ({ deletedChars, insertedChars }) {
     this.delete_fromRemote(deletedChars);
-    this.insert_fromRemote(newChar);
+    this.insert_fromRemote(insertedChars);
   }
 }
