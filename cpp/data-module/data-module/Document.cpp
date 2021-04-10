@@ -124,9 +124,9 @@ int Document::delete_fromRemote(chr_t chr, usr_t usr, int len) {
 }
 
 void Document::printDocument() const {
-    cout << "--- Module WebAssembly ---" << endl;
-    cout << "taille du document: " << doc.size() << endl;
+    cout << "----------------- Module WebAssembly ----------------" << endl;
 
+    // print the document
     string docStr = "";
     for (vector<Character>::const_iterator it = doc.cbegin(); it != doc.cend(); ++it) {
         if (it->getChar() == 9) {
@@ -139,14 +139,31 @@ void Document::printDocument() const {
             docStr += it->getChar();
         }
     }
-    cout << docStr << endl;
 
+    if (docStr.size() > 0) {
+        cout << docStr << endl;
+    }
+
+    cout << "---                                               ---" << endl;
+
+    // print the Character with the longest position vector
+    pair<size_t, size_t> maxPosVector = { 0, 0 };
+    for (vector<Character>::const_iterator it = doc.cbegin(); it != doc.cend(); ++it) {
+        if (maxPosVector.first < it->posVectorSize()) {
+            maxPosVector = { it->posVectorSize(), it - doc.cbegin() };
+        }
+    }
+
+    if (maxPosVector.first > 0) {
+        cout << "caractere avec le plus long vecteur de position:" << endl;
+        cout << doc[maxPosVector.second] << endl;
+    }
+
+    cout << "taille du document: " << doc.size() << endl;
     hash<string> hasher;
-    cout << "hash: " << to_string(hasher(docStr)) << endl;
+    cout << "hash du document: " << to_string(hasher(docStr)) << endl;
 
-    //for (vector<Character>::const_iterator it = doc.cbegin(); it != doc.cend(); ++it) {
-    //    cout << (*it) << endl;
-    //}
+    cout << "-----------------------------------------------------" << endl;
 }
 
 pair<bool, int> Document::findCharIndex(const Character& chr) {

@@ -46,17 +46,18 @@ public:
         else if (obj.chr == 9) { chr_ = "\\t"; }
         else { chr_ = string(1, char(obj.chr)); }
 
-        return os << "{ chr: " << chr_ << ", usr: " << obj.usr << ", pos: " << obj.posVectorToString() << " }";
+        return os << "{ chr: " << chr_ << ", usr: " << obj.usr << ", pos: " <<
+            obj.posVectorToString() << " }";
     }
 
     chr_t getChar() const;
 
     string posVectorToString() const;
 
-    // friend ostream& operator<<(ostream& os, const Character& obj);
+    size_t posVectorSize() const;
 
-    // copies the Character's position vector to the heap followed by its character ASCII number and
-    // its author's id, returns the position vector's length
+    // copies the Character's position vector to the heap followed by its character ASCII number
+    // and its author's id, returns the position vector's length
     int characterToHeap(pos_ptr_t posArray_offset) const;
 
     // compares the char attributes of two Character instances

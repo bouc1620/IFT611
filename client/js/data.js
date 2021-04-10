@@ -35,7 +35,7 @@ class Document {
   }
 
   /**
-   * Allocates memory for a signed i16 array on the heap to exchange position vectors between
+   * Allocates memory for a signed Int16 array on the heap to exchange position vectors between
    * JavaScript and WebAssembly 
    * @param {number} size 
    * @returns {object {array: Int16Array, address: number}} 
@@ -189,34 +189,56 @@ class Document {
 
   /**
    * Inserts one or more Characters written by a peer into the Document instance as well as in the
-   * editor
+   * editor, these Characters all have the same insert position inside the editor
    * @param {Character[]} newChars 
    */
   insert_fromRemote (newChars) {
+    const newCharsArray = [];
+    let from = undefined;
+
     for (const newChar of newChars) {
       this.posToHeap(newChar.pos);
       const index = this.instance.insert_fromRemote(newChar.char.charCodeAt(0), newChar.user, newChar.pos.length);
 
       if (index != -1) {
-        editor.codemirror.replaceRange(newChar.char, editor.codemirror.posFromIndex(index));
+        newCharsArray.push(newChar.char);
+        if (from == undefined) {
+          from = editor.codemirror.posFromIndex(index);
+        }
       }
+    }
+
+    // codemirror.replaceRange is costly, insert all at once
+    if (from != undefined) {
+      editor.codemirror.replaceRange(newCharsArray.join(''), from);
     }
   }
 
   /**
    * Deletes one or multiple Characters received by a peer from the Document instance and the
-   * editor
+   * editor, these Characters are continuous in the editor
    * @param {Character[]} deletedChars 
    */
   delete_fromRemote (deletedChars) {
+    let from = Infinity;
+    let to = -Infinity;
+
     for (const char of deletedChars) {
       this.posToHeap(char.pos);
       const index = this.instance.delete_fromRemote(char.char.charCodeAt(0), char.user, char.pos.length);
 
       if (index != -1) {
-        const editorPos = editor.codemirror.posFromIndex(index + 1);
-        editor.codemirror.replaceRange('', editor.codemirror.posFromIndex(index), editorPos);
+        from = Math.min(index, from);
+        to = Math.max(index + 1, to);
       }
+    }
+
+    // codemirror.replaceRange is costly, delete all at once
+    if (from < to) {
+      from = editor.codemirror.posFromIndex(from);
+      to = editor.codemirror.posFromIndex(to);
+
+      editor.codemirror.replaceRange('', from, to);
     }
   }
 

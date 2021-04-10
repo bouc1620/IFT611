@@ -31,11 +31,11 @@ string Character::posVectorToString() const {
     return posStr;
 }
 
-int Character::characterToHeap(pos_ptr_t posArray_offset) const {
-    // TODO: réallouer l'espace sur le tas si le vecteur de position à envoyer est trop
-    //       grand et communiquer l'adresse de la nouvelle mémoire allouée et la taille
-    //       du nouvel espace à Document
+size_t Character::posVectorSize() const {
+    return pos.size();
+}
 
+int Character::characterToHeap(pos_ptr_t posArray_offset) const {
     for (pos_vector_t::const_iterator it = pos.cbegin(); it != pos.cend(); ++it) {
         posArray_offset[it - pos.cbegin()] = *it;
     }
@@ -43,6 +43,8 @@ int Character::characterToHeap(pos_ptr_t posArray_offset) const {
     posArray_offset[pos.size()] = this->chr;
     posArray_offset[pos.size() + 1] = this->usr;
 
+    //// print the position vector, for debugging
+    // 
     //string posStr = "[ ";
     //for (int i = 0; i < pos.size() + 2; ++i) {
     //    posStr += to_string(posArray_offset[i]);

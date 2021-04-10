@@ -14,7 +14,7 @@ let connections;
 
 // start the app once the WebAssembly module is fully loaded
 Module.onRuntimeInitialized = () => {
-  documentData = new Document(50);
+  documentData = new Document(1000);
 
   peer = new Peer(
     peerID, {
@@ -67,7 +67,9 @@ Module.onRuntimeInitialized = () => {
   });
 };
 
-// filters out disconnected peers once in a while
+/**
+ * A closure that filters out disconnected peers after a number of operations broadcast
+ */
 const refreshPeers = (function () {
   const WAIT = 10; // the number of broadcasts between each verification
   let current = 0;
