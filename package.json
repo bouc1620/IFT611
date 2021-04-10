@@ -4,7 +4,8 @@
   "description": "Projet IFT611, Éditeur de texte collaboratif en temps réel",
   "main": "server/server.js",
   "scripts": {
-    "start": "nodemon server/server.js",
+    "build-wasm": "bash ./build_wasm.sh",
+    "start": "npm run build-wasm && nodemon server/server.js",
     "release": "node server/server.js"
   },
   "repository": {

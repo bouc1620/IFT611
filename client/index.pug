@@ -13,9 +13,10 @@ html
         script(src='https://chancejs.com/chance.min.js')
         script.
             peerID='#{peerID}';
-        script(defer, src='js/editor.js')
-        script(defer, src='js/client.js')
-        script(defer, src='js/data.js')
+        script(src='wasm/data_module.js', defer='true')
+        script(src='js/data.js', defer='true')
+        script(src='js/editor.js', defer='true')
+        script(src='js/client.js', defer='true')
         script(defer, src='js/gremlins.min.js')
         script(defer, src='js/test-bot.js')
     body
