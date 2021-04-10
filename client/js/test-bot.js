@@ -154,6 +154,7 @@ this.document.getElementById("test-bot-replace").addEventListener("click", funct
 
 this.document.getElementById("test-bot-network").addEventListener("click", function () {
   networkTimes = [];
+  networkTimeMap = new Map();
   testBotNetwork.unleash().then(() => {
     console.log(`Moyenne du network :  ${calculerMoyenne(networkTimes)} ms`);
   });
