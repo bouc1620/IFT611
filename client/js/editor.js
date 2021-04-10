@@ -12,16 +12,19 @@ editor.codemirror.options.dragDrop = false;
 editor.codemirror.setOption('extraKeys', { Enter: (command) => command.replaceSelection('\n') });
 
 editor.codemirror.on('change', (_instance, changeObj) => {
-
-  if (changeObj.origin === undefined)
+  if (changeObj.origin === undefined) {
     return;
+  }
 
-if (changeObj.origin == '+input' && changeObj.removed == '') {
+  if (changeObj.origin == '+input' && changeObj.removed == '') {
     // one or more characters inserted
     const chars = changeObj.text.join('\n');
     const index = editor.codemirror.indexFromPos(changeObj.to);
     documentData.insert_fromLocal(chars, index);
-  } else if (changeObj.origin == '+input' || changeObj.origin == 'undo' || changeObj.origin == 'redo') {
+  } else if (changeObj.origin == '+input' ||
+             changeObj.origin == 'undo' ||
+             changeObj.origin == 'redo' ||
+             changeObj.origin == 'paste') {
     // range replaced
     const chars = changeObj.text.join('\n');
     const index = editor.codemirror.indexFromPos(changeObj.from);
@@ -47,7 +50,7 @@ if (changeObj.origin == '+input' && changeObj.removed == '') {
  * pasted text
  */
 const onCursorActivity = (function () {
-  const DELAY = 50;
+  const DELAY = 50; // 50ms delay
 
   let last = undefined;
   let timeoutHandle = undefined;
