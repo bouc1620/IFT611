@@ -8,11 +8,11 @@ class Character {
 
 /**
  * Contains a data structure representing the document shared by the peers
- * this class encapsulates the Document class written in C++ and transpiled to WebAssembly
+ * this class encapsulates the Document class from the WebAssembly module
  */
 class Document {
   constructor (size) {
-    // shared i16 array between JavaScript and WebAssembly
+    // shared Int16 array between JavaScript and WebAssembly
     this.sharedMemory = this.allocateArray_i16(size);
     // the WebAssembly Document instance
     this.instance = new Module.Document(parseInt(peerID), this.sharedMemory.offset);
@@ -84,11 +84,11 @@ class Document {
       this.instance.pushNextCharacter(newChar.char.charCodeAt(0), newChar.user, newChar.pos.length);
     }
 
-    // copy each character in the editor
+    // copy each character in the editor and remove read only property
     editor.codemirror.setValue(document.map((newChar) => newChar.char).join(''));
     editor.codemirror.setOption('readOnly', false);
 
-    // send own and request others cursor positions
+    // send own and then request others cursor positions
     broadcast({
       operation: OPERATION.SEND_CURSOR,
       payload: {
@@ -159,9 +159,9 @@ class Document {
   }
 
   /**
-   * Replaces a range of Characters from the Document instance with a single new Character and
+   * Replaces a range of Characters from the Document instance with one or more Characters and
    * broadcasts the operation on the network
-   * @param {string[]} newChars 
+   * @param {string} newChars 
    * @param {number} index 
    * @param {number} length 
    */
@@ -189,7 +189,7 @@ class Document {
 
   /**
    * Inserts one or more Characters written by a peer into the Document instance as well as in the
-   * editor, these Characters all have the same insert position inside the editor
+   * editor, these Characters all have the same insert position in the editor
    * @param {Character[]} newChars 
    */
   insert_fromRemote (newChars) {
@@ -216,7 +216,7 @@ class Document {
 
   /**
    * Deletes one or multiple Characters received by a peer from the Document instance and the
-   * editor, these Characters are continuous in the editor
+   * editor, these Characters are in a continuous string in the editor
    * @param {Character[]} deletedChars 
    */
   delete_fromRemote (deletedChars) {
