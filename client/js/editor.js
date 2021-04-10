@@ -16,7 +16,6 @@ editor.codemirror.on('change', (_instance, changeObj) => {
   if (changeObj.origin === undefined)
     return;
 
-  const t0 = performance.now();
   if (changeObj.origin == '+input') {
     if (changeObj.removed == '') {
       let char = changeObj.text.length > 1 ? '\n' : changeObj.text[0];
@@ -33,8 +32,6 @@ editor.codemirror.on('change', (_instance, changeObj) => {
     let length = changeObj.removed.reduce((total, current) => total + current.length, 0) + changeObj.removed.length - 1;
     documentData.delete_fromLocal(index, length);
   }
-  const t1 = performance.now();
-  console.log(`Operation ` + changeObj.origin + ` : ${t1 - t0} ms.`);
 });
 
 editor.codemirror.on('cursorActivity', (instance) => {
