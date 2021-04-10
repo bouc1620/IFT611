@@ -1,95 +1,88 @@
-const OPERATIONS = {
-  INSERT: 0,
-  DELETE: 1,
-  REPLACE: 2,
-  REQUEST_DOCUMENT: 3,
-  SEND_DOCUMENT: 4,
-  REQUEST_CURSOR: 5,
-  SEND_CURSOR: 6,
-  SEND_TEST_NETWORK: 7,
-  RECEIVE_TEST_NETWORK: 8
+const OPERATION = {
+  INSERT: 1,
+  DELETE: 2,
+  REPLACE: 3,
+  REQUEST_DOCUMENT: 4,
+  SEND_DOCUMENT: 5,
+  REQUEST_CURSOR: 6,
+  SEND_CURSOR: 7,
+  SEND_TEST_NETWORK: 8,
+  RECEIVE_TEST_NETWORK: 9
 };
 
-const connections = [];
+let documentData;
+let peer;
+let connections;
 
-const self = new Peer(
-  peerID, {
-  host: '/',
-  port: '3000',
-  path: '/peerjs'
-});
+// start the app once the WebAssembly module is fully loaded
+Module.onRuntimeInitialized = () => {
+  documentData = new Document(1000);
 
-// connect to other peers when joining the network
-self.on('open', () => {
-  self.listAllPeers((peers) => {
-    let index = peers.indexOf(self.id);
-    if (index != -1) {
-      peers.splice(index, 1);
-    }
+  peer = new Peer(
+    peerID, {
+    host: '/',
+    port: '3000',
+    path: '/peerjs'
+  });
 
-    if (peers.length == 0) {
-      editor.codemirror.options.readOnly = false;
-      return;
-    }
+  connections = new Map();
 
-    peers.sort((a, b) => b - a);
-    index = peers.findIndex((peer) => peer < self.id);
-    if (index == -1) {
-      index = peers[peers.length - 1];
-    }
-    peers.reverse();
+  // connect to other peers when joining the network
+  peer.on('open', () => {
+    peer.listAllPeers((others) => {
+      others = others.filter((other) => other != peerID);
 
-    for (const peer of peers) {
-      let link = self.connect(peer);
-      link.on('data', (data) => receiveData(data, link));
-
-      // ask for a copy of the document
-      if (peer == index) {
-        link.on('open', () => {
-          link.send(JSON.stringify({
-            operation: OPERATIONS.REQUEST_DOCUMENT,
-            payload: null
-          }));
-        });
+      if (others.length == 0) {
+        editor.codemirror.options.readOnly = false;
+        return;
       }
 
-      connections.push({
-        id: peer,
-        link: link
-      });
-    }
+      others.sort((a, b) => b - a);
+      let index = others.findIndex((other) => other < peerID);
+      if (index == -1) {
+        index = others[others.length - 1];
+      }
+
+      for (const other of others) {
+        let link = peer.connect(other);
+        link.on('data', (data) => receiveData(data, link));
+
+        // ask for a copy of the document
+        if (other == index) {
+          link.on('open', () => {
+            link.send(JSON.stringify({
+              operation: OPERATION.REQUEST_DOCUMENT,
+              payload: null
+            }));
+          });
+        }
+
+        connections.set(other, link);
+      }
+    });
   });
-});
 
-// listen to new peers joining the network
-self.on('connection', (link) => {
-  link.on('data', (data) => receiveData(data, link));
-
-  // insertion into a sorted array
-  for (var index = connections.length - 1; index > 0; --index) {
-    if (connections[index].id < link.peer) {
-      index++;
-      break;
-    }
-  }
-
-  connections.splice(index, 0, {
-    id: link.peer,
-    link: link
+  // listen to new peers joining the network
+  peer.on('connection', (link) => {
+    link.on('data', (data) => receiveData(data, link));
+    connections.set(link.peer, link);
   });
-});
+};
 
-// filter out disconnected peers once in a while
-var refreshPeers = (() => {
-  const wait = 5; // the number of broadcasts between each refresh
+/**
+ * A closure that filters out disconnected peers after a number of operations broadcast
+ */
+const refreshPeers = (function () {
+  const WAIT = 10; // the number of broadcasts between each verification
   let current = 0;
+
   return () => {
-    if (current++ >= wait) {
-      self.listAllPeers((peers) => {
-        for (let i = connections.length - 1; i >= 0; i--) {
-          if (peers.findIndex((peer) => peer == connections[i].id) == -1) {
-            documentData.removeCursor(connections[i].id);
-            connections.splice(i, 1);
+    if (current++ >= WAIT) {
+      peer.listAllPeers((others) => {
+        for (const other of connections.keys()) {
+          if (others.find((other_) => other_ == other) == undefined) {
+            documentData.removeCursor(other);
+            connections.delete(other);
           }
         }
       });
@@ -98,47 +91,56 @@ var refreshPeers = (() => {
   };
 })();
 
+/**
+ * Broadcasts an operation on the document to the network
+ * @param {object} message
+ */
 function broadcast (message) {
   refreshPeers();
   message = JSON.stringify(message);
-  for (const conn of connections) {
-    conn.link.send(message);
+  for (const link of connections.values()) {
+    link.send(message);
   }
 }
 
+/**
+ * Receives operations on the document from other peers
+ * @param {JSON} data 
+ * @param {DataConnection} link 
+ */
 function receiveData (data, link) {
   let t0 = performance.now();
   data = JSON.parse(data);
 
   switch (data.operation) {
-    case OPERATIONS.INSERT:
+    case OPERATION.INSERT:
       documentData.insert_fromRemote(data.payload);
       break;
-    case OPERATIONS.DELETE:
+    case OPERATION.DELETE:
       documentData.delete_fromRemote(data.payload);
       break;
-    case OPERATIONS.REPLACE:
+    case OPERATION.REPLACE:
       documentData.replace_fromRemote(data.payload);
       break;
-    case OPERATIONS.REQUEST_DOCUMENT:
+    case OPERATION.REQUEST_DOCUMENT:
       link.send(JSON.stringify({
-        operation: OPERATIONS.SEND_DOCUMENT,
-        payload: documentData.document
+        operation: OPERATION.SEND_DOCUMENT,
+        payload: documentData.getDocument()
       }));
       break;
-    case OPERATIONS.SEND_DOCUMENT:
+    case OPERATION.SEND_DOCUMENT:
       documentData.copyDocument(data.payload);
       break;
-    case OPERATIONS.REQUEST_CURSOR:
+    case OPERATION.REQUEST_CURSOR:
       link.send(JSON.stringify({
-        operation: OPERATIONS.SEND_CURSOR,
+        operation: OPERATION.SEND_CURSOR,
         payload: {
-          user: self.id,
-          pos: editor.codemirror.getCursor()
+          user: peerID,
+          position: editor.codemirror.getCursor()
         }
       }));
       break;
-    case OPERATIONS.SEND_CURSOR:
+    case OPERATION.SEND_CURSOR:
       documentData.updateCursor(data.payload);
       break;
     case OPERATIONS.SEND_TEST_NETWORK:
@@ -156,7 +158,7 @@ function receiveData (data, link) {
       networkTimes.push(timeAverage);
       break;
     default:
-      console.error(`received unexpected operation type : ${data.operation}`);
+      console.error('received unexpected operation type');
   }
   let t1 = performance.now();
   console.log(`Operation ` + data.operation + ` : ${t1 - t0} ms.`);
