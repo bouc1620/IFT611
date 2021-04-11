@@ -12,9 +12,7 @@ editor.codemirror.options.dragDrop = false;
 editor.codemirror.setOption('extraKeys', { Enter: (command) => command.replaceSelection('\n') });
 
 editor.codemirror.on('change', (_instance, changeObj) => {
-  if (changeObj.origin === undefined) {
-    return;
-  }
+  if (changeObj.origin === undefined) { return; }
 
   if (changeObj.origin == '+input' && changeObj.removed == '') {
     // one or more characters inserted
@@ -22,9 +20,9 @@ editor.codemirror.on('change', (_instance, changeObj) => {
     const index = editor.codemirror.indexFromPos(changeObj.to);
     documentData.insert_fromLocal(chars, index);
   } else if (changeObj.origin == '+input' ||
-             changeObj.origin == 'undo' ||
-             changeObj.origin == 'redo' ||
-             changeObj.origin == 'paste') {
+    changeObj.origin == 'undo' ||
+    changeObj.origin == 'redo' ||
+    changeObj.origin == 'paste') {
     // range replaced
     const chars = changeObj.text.join('\n');
     const index = editor.codemirror.indexFromPos(changeObj.from);
@@ -50,7 +48,7 @@ editor.codemirror.on('change', (_instance, changeObj) => {
  * pasted text
  */
 const onCursorActivity = (function () {
-  const DELAY = 50; // 50ms delay
+  const DELAY = 50; // delay in ms
 
   let last = undefined;
   let timeoutHandle = undefined;
@@ -83,7 +81,7 @@ const onCursorActivity = (function () {
 
 editor.codemirror.on('cursorActivity', onCursorActivity);
 
-const CURSORS_COLORS = [
+const CURSOR_COLORS = [
   '#ff0000', // red
   '#0066ff', // blue
   '#00994d', // green
@@ -100,9 +98,9 @@ function createCursor (user, position) {
   const cursorElement = document.createElement('span');
   cursorElement.classList.add('cursor');
 
-  cursorElement.style.borderLeftColor = CURSORS_COLORS[user % CURSORS_COLORS.length];
+  cursorElement.style.borderLeftColor = CURSOR_COLORS[user % CURSOR_COLORS.length];
 
-  const { _left, top, bottom } = editor.codemirror.cursorCoords(position);
+  const { top, bottom } = editor.codemirror.cursorCoords(position);
   cursorElement.style.height = `${bottom - top}px`;
 
   return editor.codemirror.setBookmark(position, { widget: cursorElement });

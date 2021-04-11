@@ -23,14 +23,14 @@ const OPERATION_STR = [
   "RECEIVE_TEST_NETWORK"
 ];
 
-// Document class instance
+/** Document class instance */
 let documentData;
-// Peer object for this peer
+/** Peer object for this user */
 let peer;
-// Maps the peer's id to their connection object
+/** Maps the peer ids to their connection object */
 const connections = new Map();
 
-// connect on the network and start the app once the WebAssembly module is loaded
+// connect to the network and start the app once the WebAssembly module is loaded
 Module.onRuntimeInitialized = () => {
   documentData = new Document(1000);
 
@@ -84,8 +84,7 @@ Module.onRuntimeInitialized = () => {
 };
 
 /**
- * A closure that filters out disconnected peers after a certain count of operations
- * broadcast
+ * A closure that filters out disconnected peers after a certain count of operations broadcast
  */
 const refreshPeers = (function () {
   const WAIT = 10; // the number of broadcasts between each verification
@@ -125,7 +124,7 @@ function broadcast (message) {
  */
 function receiveData (data, link) {
   const t0 = performance.now();
-  
+
   data = JSON.parse(data);
 
   switch (data.operation) {
@@ -176,7 +175,7 @@ function receiveData (data, link) {
     default:
       console.error('received unexpected operation type');
   }
-  
+
   const t1 = performance.now();
   console.log(`Operation #${data.operation}, ${OPERATION_STR[data.operation]} : ${t1 - t0} ms.`);
 }
