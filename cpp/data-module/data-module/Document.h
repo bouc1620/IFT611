@@ -5,8 +5,6 @@
 
 #include "Character.h"
 
-using namespace std;
-
 class Document {
 public:
     using chr_t = Character::chr_t;
@@ -22,9 +20,9 @@ private:
     // JavaScript and WebAssembly
     pos_ptr_t posArray_offset;
     // the synchronized content of the collaborative text editor
-    vector<Character> doc;
+    std::vector<Character> doc;
     // delete operations that were received from peers before their insert operation
-    vector<Character> delBacklog;
+    std::vector<Character> delBacklog;
 
 public:
     Document() = delete;
@@ -71,7 +69,7 @@ private:
     // document or the Character's actual index if it was found
     // pair.first:  is it an insertion index or was the actual Character found?
     // pair.second: the index
-    pair<bool, int> findCharIndex(const Character& chr);
+    std::pair<bool, int> findCharIndex(const Character& chr);
 };
 
 #endif

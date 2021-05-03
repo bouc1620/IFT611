@@ -5,15 +5,13 @@
 #include <string>
 #include <iostream>
 
-using namespace std;
-
 class Character {
 public:
     using chr_t = int16_t;
     using usr_t = int16_t;
     using pos_t = int16_t;
     using pos_ptr_t = pos_t*;
-    using pos_vector_t = vector<pos_t>;
+    using pos_vector_t = std::vector<pos_t>;
 
     static const pos_t POS_BEGIN = 0;
 
@@ -40,11 +38,11 @@ public:
 
     bool operator==(const Character& other) const;
 
-    friend ostream& operator<<(ostream& os, const Character& obj) {
-        string chr_;
+    friend std::ostream& operator<<(std::ostream& os, const Character& obj) {
+        std::string chr_;
         if (obj.chr == 10) { chr_ = "\\n"; }
         else if (obj.chr == 9) { chr_ = "\\t"; }
-        else { chr_ = string(1, char(obj.chr)); }
+        else { chr_ = std::string(1, char(obj.chr)); }
 
         return os << "{ chr: " << chr_ << ", usr: " << obj.usr << ", pos: " <<
             obj.posVectorToString() << " }";
@@ -52,7 +50,7 @@ public:
 
     chr_t getChar() const;
 
-    string posVectorToString() const;
+    std::string posVectorToString() const;
 
     size_t posVectorSize() const;
 

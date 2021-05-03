@@ -43,17 +43,6 @@ int Character::characterToHeap(pos_ptr_t posArray_offset) const {
     posArray_offset[pos.size()] = this->chr;
     posArray_offset[pos.size() + 1] = this->usr;
 
-    //// print the position vector, for debugging
-    // 
-    //string posStr = "[ ";
-    //for (int i = 0; i < pos.size() + 2; ++i) {
-    //    posStr += to_string(posArray_offset[i]);
-    //    posStr += (i + 1 != (pos.size() + 2) ? ", " : " ");
-    //}
-    //posStr += "]";
-
-    //cout << posStr << endl;
-
     return (int)pos.size();
 }
 
