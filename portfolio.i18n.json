@@ -1,0 +1,26 @@
+{
+  "description": {
+    "fr": "Éditeur de texte collaboratif en temps réel réalisé dans un cadre académique, utilisant WebRTC (PeerJS) et WebAssembly pour la cohérence du document, écrit en C++ et compilé avec Emscripten.",
+    "en": "Real-time collaborative text editor built as an academic project, using WebRTC (PeerJS) and WebAssembly for document consistency, written in C++ and compiled with Emscripten."
+  },
+  "keywords": {
+    "fr": [
+      "C++",
+      "JavaScript",
+      "Pug",
+      "Emscripten",
+      "Wasm",
+      "WebRTC",
+      "Pair-à-pair"
+    ],
+    "en": [
+      "C++",
+      "JavaScript",
+      "Pug",
+      "Emscripten",
+      "Wasm",
+      "WebRTC",
+      "Peer-to-peer"
+    ]
+  }
+}
